@@ -1,0 +1,2393 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTL Space Utilization</title>
+<link rel="icon" type="image/png" sizes="192x192" href="./gtl-icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./gtl-icon-512.png">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="./gtl-icon-180.png">
+<meta name="apple-mobile-web-app-title" content="GTL Space Utilization">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="GTL Space Utilization">
+<meta name="theme-color" content="#073b4e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --navy:#073b4e;
+  --darkgreen:#006b55;
+  --green:#00a76b;
+  --blue:#087af5;
+  --maroon:#a00d4a;
+  --gold:#ffbc08;
+  --text:#082b49;
+  --muted:#5b788e;
+  --border:#cce9e0;
+  --surface:#ffffff;
+}
+
+* { box-sizing:border-box; }
+
+html,body {
+  margin:0;
+  width:100%;
+  min-height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 12% 18%,#baf2db 0%,transparent 42%),
+    radial-gradient(ellipse at 90% 72%,#a3e8ce 0%,transparent 48%),
+    linear-gradient(145deg,#f0fff8,#d6f5e8 55%,#bdebd9);
+  background-attachment:fixed;
+}
+
+button,select {
+  font-family:inherit;
+}
+
+button { cursor:pointer; }
+
+.header {
+  background:
+    radial-gradient(ellipse at 78% 110%,#069d78 0%,transparent 48%),
+    linear-gradient(110deg,#073c4c,#006c56);
+  color:white;
+  padding:16px 22px;
+  box-shadow:0 4px 16px #064d3b24;
+}
+
+.header-inner {
+  max-width:1750px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+.logo {
+  width:75px;
+  height:75px;
+  object-fit:contain;
+  background:white;
+  border-radius:50%;
+  padding:3px;
+  flex-shrink:0;
+}
+
+.brand {
+  flex:1;
+  min-width:0;
+}
+
+.brand small {
+  font-size:11px;
+  font-weight:800;
+}
+
+.brand h1 {
+  margin:6px 0;
+  font-size:27px;
+}
+
+.brand p {
+  margin:0;
+  color:#d4f5e9;
+  font-size:12px;
+}
+
+.controls {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.controls select,
+.controls button {
+  border:1px solid #d6e9e5;
+  background:white;
+  color:#063c43;
+  padding:11px 14px;
+  border-radius:9px;
+  font-size:12px;
+  font-weight:700;
+}
+
+#updated {
+  font-size:10px;
+  color:#e0fff5;
+}
+
+main {
+  max-width:1750px;
+  margin:auto;
+  padding:15px;
+}
+
+.tabs {
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.tab {
+  padding:12px 23px;
+  border:1px solid #c9e6dd;
+  border-radius:9px;
+  background:white;
+  color:#073b4e;
+  font-size:12px;
+  font-weight:bold;
+  box-shadow:0 2px 5px #064f3c12;
+}
+
+.tab.active {
+  background:linear-gradient(120deg,#006b55,#008a65);
+  color:white;
+  border-color:#006b55;
+}
+
+.hidden { display:none!important; }
+
+#error {
+  display:none;
+  background:#fff0ed;
+  color:#a52a20;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:12px;
+}
+
+/* KPI CARDS */
+
+.kpis {
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.kpi {
+  min-width:0;
+  min-height:105px;
+  padding:13px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:linear-gradient(140deg,#ffffff,var(--tint));
+  border:1px solid #d4e6e3;
+  border-top:4px solid var(--accent);
+  border-radius:13px;
+  box-shadow:0 4px 12px #0c6b5020;
+}
+
+.kpi-icon {
+  width:48px;
+  height:48px;
+  flex-shrink:0;
+  color:var(--accent);
+}
+
+.kpi-icon svg {
+  width:100%;
+  height:100%;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.kpi label {
+  display:block;
+  font-size:11px;
+  font-weight:800;
+}
+
+.kpi strong {
+  display:block;
+  margin:5px 0;
+  font-size:clamp(18px,2vw,28px);
+  font-weight:800;
+  color:#072c4a;
+}
+
+.kpi small {
+  font-size:10px;
+  font-weight:bold;
+}
+
+/* DASHBOARD PANELS */
+
+.top-grid {
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,1fr) minmax(0,.94fr);
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.bottom-grid {
+  display:grid;
+  grid-template-columns:.95fr 1.4fr;
+  gap:12px;
+}
+
+.panel {
+  min-width:0;
+  background:rgba(255,255,255,.97);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:15px;
+  box-shadow:0 4px 12px #0a655018;
+}
+
+.panel h2 {
+  margin:0 0 5px;
+  font-size:14px;
+  font-weight:800;
+}
+
+.subtitle {
+  margin:0 0 13px;
+  font-size:10px;
+  color:var(--muted);
+}
+
+.chart {
+  position:relative;
+  height:275px;
+  width:100%;
+}
+
+/* Prevent Android Chrome's temporary blue tap-selection overlay. */
+#overallChart, .donut-layout, .overall-legend-button, .overall-show-all {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#overallChart { touch-action: manipulation; }
+
+.chart canvas {
+  width:100%!important;
+  height:100%!important;
+}
+
+.donut-layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr)120px;
+  align-items:center;
+  gap:7px;
+}
+
+.donut-layout .chart {
+  height:250px;
+}
+
+.legend-row {
+  display:flex;
+  justify-content:space-between;
+  gap:5px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid #e1ece8;
+  font-size:10px;
+}
+
+.legend-name {
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.swatch {
+  width:10px;
+  height:10px;
+  border-radius:3px;
+  flex-shrink:0;
+}
+
+/* Keep floor availability alongside the other overview charts on desktop. */
+@media (min-width:1051px) {
+  .top-grid > .panel { min-width:0; }
+  .top-grid > .panel:last-child { grid-column:auto; }
+  .top-grid .floor-item { margin:13px 0; }
+  .top-grid .floor-select { margin-bottom:8px; }
+}
+
+/* FLOOR AVAILABILITY CHART */
+
+.floor-select {
+  text-align:right;
+  margin-bottom:12px;
+}
+
+.floor-select select {
+  max-width:200px;
+  padding:8px;
+  border:1px solid #c5dfd8;
+  border-radius:8px;
+  background:#f5fcfa;
+  color:#073b4e;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.floor-item {
+  margin:20px 0;
+}
+
+.floor-heading {
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.floor-heading span:last-child {
+  text-align:right;
+}
+
+.floor-heading small {
+  display:block;
+  font-size:10px;
+  font-weight:normal;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+.track {
+  width:100%;
+  height:15px;
+  border-radius:20px;
+  background:#dfebe8;
+  overflow:hidden;
+  margin:9px 0 6px;
+}
+
+.fill {
+  height:100%;
+  border-radius:20px;
+  transition:width .6s ease;
+}
+
+.floor-percent {
+  font-size:10px;
+  color:#52778b;
+}
+
+/* WAREHOUSE MAPS */
+
+.maps {
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+
+.map-card {
+  background:white;
+  border:1px solid #d2e5df;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 6px #073b4e1b;
+}
+
+.map-image {
+  display:block;
+  width:100%;
+  height:94px;
+  object-fit:cover;
+  background:#dcece7;
+}
+
+.map-info {
+  padding:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:5px;
+}
+
+.map-info strong {
+  font-size:9px;
+  overflow-wrap:anywhere;
+}
+
+.map-link {
+  width:27px;
+  height:27px;
+  border-radius:50%;
+  background:#087af5;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-decoration:none;
+  font-size:18px;
+  flex-shrink:0;
+}
+
+.map-link:hover {
+  background:#0752a5;
+}
+
+.pending {
+  font-size:9px;
+  color:#7b8b95;
+}
+
+/* TABLE */
+
+.table-wrap {
+  overflow:auto;
+  max-height:310px;
+}
+
+table {
+  width:100%;
+  border-collapse:collapse;
+  white-space:nowrap;
+  font-size:10px;
+}
+
+thead {
+  position:sticky;
+  top:0;
+  background:#006b55;
+  color:white;
+}
+
+th,td {
+  padding:9px 7px;
+  text-align:left;
+  border-bottom:1px solid #e3eee9;
+}
+
+th {
+  font-size:9px;
+}
+
+td.num,th.num {
+  text-align:right;
+}
+
+tbody tr:nth-child(even) {
+  background:#f0faf5;
+}
+
+.available-value {
+  color:#008b55;
+  font-weight:bold;
+}
+
+.pill {
+  background:#d4f4e2;
+  padding:4px 8px;
+  border-radius:15px;
+  font-weight:bold;
+}
+
+/* AREA AVAILABILITY PAGE */
+
+.availability-hero {
+  background:linear-gradient(110deg,#073b4e,#07846b);
+  border-radius:14px;
+  padding:23px 25px;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:15px;
+}
+
+.availability-hero h2 {
+  font-size:22px;
+  margin:0 0 7px;
+}
+
+.availability-hero p {
+  font-size:12px;
+  margin:0;
+}
+
+.hero-number {
+  text-align:right;
+  flex-shrink:0;
+}
+
+.hero-number strong {
+  display:block;
+  font-size:32px;
+}
+
+.hero-number span {
+  font-size:12px;
+}
+
+.floor-summary-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:15px;
+  margin-bottom:15px;
+}
+
+.floor-summary-card {
+  min-width:0;
+  background:white;
+  border:1px solid var(--border);
+  border-top:4px solid var(--floor-color);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 4px 12px #0a655018;
+}
+
+.floor-summary-title {
+  margin:0 0 15px;
+  font-size:13px;
+  font-weight:bold;
+}
+
+.floor-summary-title svg {
+  display:none;
+}
+
+.floor-metrics {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+
+.floor-metric {
+  min-width:0;
+  padding:14px;
+  border-radius:10px;
+  background:#edf5fa;
+}
+
+.floor-metric span {
+  display:block;
+  color:#557c9b;
+  font-size:11px;
+  margin-bottom:7px;
+}
+
+.floor-metric strong {
+  font-size:22px;
+  color:#072c4a;
+}
+
+.all-floors {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.floor-detail {
+  background:#fff;
+  border:1px solid #cfe8df;
+  border-radius:12px;
+  padding:15px;
+}
+
+.floor-detail h3 {
+  margin:0 0 12px;
+  font-size:13px;
+}
+
+.note {
+  color:#5b788e;
+  font-size:10px;
+  margin-top:12px;
+}
+
+/* TABLET */
+
+@media(max-width:1050px) {
+  .top-grid {
+    grid-template-columns:1fr 1fr;
+  }
+  .top-grid .panel:last-child {
+    grid-column:1/-1;
+  }
+  .bottom-grid {
+    grid-template-columns:1fr;
+  }
+  .kpi {
+    gap:7px;
+    padding:10px;
+  }
+  .kpi-icon {
+    width:34px;
+    height:34px;
+  }
+}
+
+/* MOBILE VERSION ONLY */
+
+@media(max-width:767px) {
+
+  html,body {
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at top,#b8f1d7,transparent 55%),
+      linear-gradient(#eafff4,#d8f5e6);
+    background-attachment:fixed;
+  }
+
+  .header {
+    padding:12px 10px;
+  }
+
+  .header-inner {
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .logo {
+    width:55px;
+    height:55px;
+  }
+
+  .brand h1 {
+    font-size:18px;
+    line-height:1.2;
+  }
+
+  .brand small {
+    font-size:9px;
+  }
+
+  .brand p {
+    font-size:9px;
+  }
+
+  .controls {
+    width:100%;
+  }
+
+  .controls select {
+    flex:1;
+    min-width:0;
+  }
+
+  #updated {
+    width:100%;
+  }
+
+  main {
+    padding:10px;
+  }
+
+  .tabs {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .tab {
+    padding:11px 5px;
+    font-size:11px;
+  }
+
+  /* FIVE KPI CARDS */
+  /* FOUR IN TWO ROWS + FULL WIDTH AVAILABLE */
+
+  .kpis {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+    overflow:visible;
+  }
+
+  .kpi {
+    width:100%;
+    min-width:0;
+    min-height:93px;
+    padding:10px;
+    gap:8px;
+  }
+
+  .kpi-icon {
+    width:34px;
+    height:34px;
+  }
+
+  .kpi label {
+    font-size:9px;
+    white-space:normal;
+  }
+
+  .kpi strong {
+    font-size:clamp(16px,4.3vw,21px);
+    overflow-wrap:anywhere;
+  }
+
+  .kpi small {
+    font-size:9px;
+  }
+
+  /* AVAILABLE AREA FULL WIDTH */
+
+  .kpi.available-kpi {
+    grid-column:1/-1;
+    min-height:92px;
+    justify-content:center;
+    gap:20px;
+    background:linear-gradient(110deg,#fffdf1,#fff2c5);
+    border:1px solid #f1c34c;
+    border-top:4px solid #ffbc08;
+  }
+
+  .available-kpi .kpi-icon {
+    width:52px;
+    height:52px;
+  }
+
+  .available-kpi label {
+    font-size:12px;
+  }
+
+  .available-kpi strong {
+    font-size:29px;
+  }
+
+  .top-grid,
+  .bottom-grid,
+  .floor-summary-grid,
+  .all-floors {
+    grid-template-columns:minmax(0,1fr);
+    gap:12px;
+  }
+
+  .top-grid .panel:last-child {
+    grid-column:auto;
+  }
+
+  .panel {
+    padding:12px;
+    overflow:hidden;
+  }
+
+  .panel h2 {
+    font-size:12px;
+  }
+
+  .chart {
+    height:285px;
+  }
+
+  .donut-layout {
+    grid-template-columns:minmax(0,1fr)112px;
+  }
+
+  .donut-layout .chart {
+    height:230px;
+  }
+
+  .legend-row {
+    font-size:9px;
+  }
+
+  .maps {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .map-image {
+    height:100px;
+  }
+
+  .table-wrap {
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  table {
+    min-width:780px;
+  }
+
+  .availability-hero {
+    padding:15px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  .availability-hero h2 {
+    font-size:17px;
+  }
+
+  .hero-number {
+    width:100%;
+    text-align:left;
+  }
+
+  .hero-number strong {
+    font-size:29px;
+  }
+
+  /* GREEN GROUND FLOOR / BLUE FIRST FLOOR */
+
+  .floor-summary-card {
+    padding:0 0 12px;
+    overflow:hidden;
+    border-top:0;
+  }
+
+  .floor-summary-title {
+    background:var(--floor-color);
+    color:white;
+    padding:14px;
+    margin:0 0 10px;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+
+  .floor-summary-title svg {
+    display:block;
+    width:22px;
+    height:22px;
+    stroke:white;
+    fill:none;
+    stroke-width:2;
+  }
+
+  .floor-metrics {
+    gap:8px;
+    padding:0 10px;
+  }
+
+  .floor-metric {
+    padding:12px 10px;
+    background:var(--floor-tint);
+  }
+
+  .floor-metric span {
+    font-size:10px;
+    color:#426b81;
+  }
+
+  .floor-metric strong {
+    font-size:clamp(16px,4.5vw,22px);
+  }
+
+  .floor-detail {
+    padding:12px;
+  }
+
+}
+
+/* FINAL FLOOR COLOURS - DESKTOP AND MOBILE */
+#floorSummary > .floor-summary-card:first-child { background:#E8F7F1 !important; border:1px solid #B8DDD0 !important; border-top:5px solid #176B56 !important; }
+#floorSummary > .floor-summary-card:nth-child(2) { background:#EAF1F8 !important; border:1px solid #C4D6E5 !important; border-top:5px solid #355C7D !important; }
+#floorSummary .floor-metric {background:#fff !important; border:1px solid #d7e6e5 !important;}
+@media(min-width:768px) {
+#floorSummary > .floor-summary-card:first-child .floor-summary-title {color:#176B56 !important;}
+#floorSummary > .floor-summary-card:nth-child(2) .floor-summary-title {color:#355C7D !important;}
+}
+@media(max-width:767px) {
+#floorSummary > .floor-summary-card:first-child .floor-summary-title {background:#176B56 !important;color:#fff !important;}
+#floorSummary > .floor-summary-card:nth-child(2) .floor-summary-title {background:#355C7D !important;color:#fff !important;}
+.available-kpi .kpi-icon {width:34px !important;height:34px !important;}
+.available-kpi label {font-size:9px !important;}
+.available-kpi strong {font-size:clamp(16px,4.3vw,21px) !important;}
+.kpi.available-kpi {gap:8px !important;justify-content:flex-start !important;}
+}
+html,body {background:#fff !important;background-image:none !important;background-attachment:scroll !important;}
+/* SUBTLE 3D DEPTH, WITHOUT DISTRACTING FROM DATA */
+.kpi,.panel,.map-card,.floor-summary-card,.floor-detail {box-shadow:0 2px 3px rgba(8,43,73,.05),0 9px 22px rgba(8,43,73,.09) !important;transition:transform .18s ease,box-shadow .18s ease;}
+@media(hover:hover) and (pointer:fine) {.kpi:hover,.map-card:hover,.floor-summary-card:hover {transform:translateY(-2px);box-shadow:0 5px 9px rgba(8,43,73,.07),0 14px 27px rgba(8,43,73,.12) !important;}}
+@media(prefers-reduced-motion:reduce) {.kpi,.panel,.map-card,.floor-summary-card,.floor-detail {transition:none !important;}}
+
+/* SMART TOUCH FEEDBACK: iPhone + Android, mobile only */
+@media (max-width:767px) {
+  .gtl-touch-feedback {
+    animation: gtlTouchPulse .32s ease-out !important;
+  }
+  @keyframes gtlTouchPulse {
+    0%   { filter:brightness(1); }
+    35%  { filter:brightness(.87) saturate(1.25); }
+    100% { filter:brightness(1); }
+  }
+  button.gtl-touch-feedback,
+  .map-link.gtl-touch-feedback,
+  .overall-legend-item.gtl-touch-feedback,
+  .overall-show-all.gtl-touch-feedback {
+    animation:gtlTouchPress .30s ease-out !important;
+  }
+  @keyframes gtlTouchPress {
+    0% {transform:scale(1);filter:brightness(1)}
+    40% {transform:scale(.95);filter:brightness(.88)}
+    100% {transform:scale(1);filter:brightness(1)}
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .gtl-touch-feedback { animation:none !important; }
+}
+
+/* GTL compact corporate layout — preserves data, charts and mobile interactions */
+@media(min-width:1051px){
+  .header{padding:10px 18px}
+  .logo{width:58px;height:58px}
+  .brand h1{font-size:21px;margin:3px 0}
+  .brand small{font-size:10px}
+  .brand p{font-size:11px}
+  .controls select,.controls button{padding:8px 11px}
+  main{padding:11px 15px}
+  .tabs{margin-bottom:10px}
+  .tab{padding:9px 18px}
+  .kpis{gap:10px;margin-bottom:10px}
+  .kpi{min-height:79px;padding:9px 11px;gap:9px}
+  .kpi-icon{width:35px;height:35px}
+  .kpi label{font-size:10px}
+  .kpi strong{font-size:clamp(17px,1.65vw,24px);margin:3px 0}
+  .kpi small{font-size:9px}
+  .panel{padding:12px}
+  .panel h2{font-size:12px}
+  .subtitle{margin-bottom:8px}
+  .chart{height:240px}
+  .donut-layout .chart{height:222px}
+  .top-grid,.bottom-grid{gap:10px;margin-bottom:10px}
+  .floor-item{margin:10px 0!important}
+  .map-image{height:82px}
+}
+@media(min-width:768px) and (max-width:1050px){
+  .kpi{min-height:85px}
+  .kpi strong{font-size:19px}
+  .kpi-icon{width:30px;height:30px}
+  .brand h1{font-size:22px}
+}
+@media(max-width:767px){
+  .header{padding:10px}
+  .brand h1{font-size:16px}
+  .logo{width:48px;height:48px}
+  .kpi{min-height:80px;padding:9px}
+  .kpi-icon{width:29px;height:29px}
+  .kpi strong{font-size:clamp(15px,4vw,19px)}
+  .kpi.available-kpi{min-height:80px}
+  .panel{padding:11px}
+  .chart{height:255px}
+  .donut-layout .chart{height:220px}
+}
+</style>
+</head>
+
+<body>
+<header class="header">
+  <div class="header-inner">
+
+    <img
+      class="logo"
+      id="gtlLogo"
+      src="./gtl-icon-192.png"
+      alt="GTL Logo"
+    >
+
+    <div class="brand">
+      <small>GLOBAL TRANSPORTATION &amp; LOGISTICS (PVT) LTD</small>
+      <h1>Warehouse Area Utilization</h1>
+      <p>Executive Dashboard | Space Availability &amp; Storage Capacity</p>
+    </div>
+
+    <div class="controls">
+      <select id="buildingFilter" onchange="mobileChartVibrate(); renderDashboard()">
+        <option value="ALL">All Warehouses</option>
+      </select>
+
+      <button id="refreshDashboardButton" onclick="loadData()">⟳ Refresh</button>
+
+      <span id="updated">Loading...</span>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+<div id="error"></div>
+
+<div class="tabs">
+  <button
+    class="tab active"
+    id="overviewTab"
+    onclick="switchPage('overview')">
+    ▦ Overview
+  </button>
+
+  <button
+    class="tab"
+    id="availabilityTab"
+    onclick="switchPage('availability')">
+    ▤ Area Availability
+  </button>
+</div>
+
+<section id="overviewPage">
+
+  <div class="kpis">
+
+    <div class="kpi"
+      style="--accent:#466a83;--tint:#e8f1f8">
+
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="M5 43V18L24 6l19 12v25M12 43V22h24v21M19 43V30h10v13M5 18h38M17 22v-7h14v7"/>
+        </svg>
+      </div>
+
+      <div>
+        <label>TOTAL AREA</label>
+        <strong id="kTotal">0</strong>
+        <small>SQ. FT.</small>
+      </div>
+    </div>
+
+    <div class="kpi"
+      style="--accent:#a00d4a;--tint:#fce8f0">
+
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
+        </svg>
+      </div>
+
+      <div>
+        <label>NON-SELLING AREA</label>
+        <strong id="kNon">0</strong>
+        <small>SQ. FT.</small>
+      </div>
+    </div>
+
+    <div class="kpi"
+      style="--accent:#00a76b;--tint:#e1faed">
+
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="M4 14 13 9l8 6-9 15-8-5V14ZM44 14l-9-5-8 6 9 15 8-5V14ZM17 19l8-5 7 5-5 4-5-2M12 30l12 12 4-3M17 34l8 8M24 21l12 11-3 4-4-2M33 36l-4 4-5-3"/>
+        </svg>
+      </div>
+
+      <div>
+        <label>RENTED AREA</label>
+        <strong id="kRented">0</strong>
+        <small>SQ. FT.</small>
+      </div>
+    </div>
+
+    <div class="kpi"
+      style="--accent:#087af5;--tint:#e4f0ff">
+
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21M14 8l20 12"/>
+        </svg>
+      </div>
+
+      <div>
+        <label>UTILIZED AREA</label>
+        <strong id="kUsed">0</strong>
+        <small>SQ. FT.</small>
+      </div>
+    </div>
+
+    <div class="kpi available-kpi"
+      style="--accent:#ffbc08;--tint:#fff4d0">
+
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21"/>
+        </svg>
+      </div>
+
+      <div>
+        <label>AVAILABLE AREA</label>
+        <strong id="kBalance">0</strong>
+        <small>SQ. FT.</small>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="top-grid">
+
+    <div class="panel">
+      <h2>OVERALL WAREHOUSE AREA UTILIZATION (%)</h2>
+      <p class="subtitle">Combined space distribution</p>
+
+      <div class="donut-layout">
+        <div class="chart">
+          <canvas id="overallChart"></canvas>
+        </div>
+        <div id="overallLegend"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>BUILDING-WISE AREA UTILIZATION (%)</h2>
+      <p class="subtitle">Percentage distribution by warehouse</p>
+      <div class="chart">
+        <canvas id="buildingChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>BUILDING-WISE FLOOR AVAILABILITY</h2>
+      <p class="subtitle">Available space by building and floor level</p>
+
+      <div class="floor-select">
+        <select
+          id="floorBuilding"
+          onchange="mobileChartVibrate(); renderFloorPanel()">
+        </select>
+      </div>
+
+      <div id="floorPanel"></div>
+    </div>
+
+  </div>
+
+  <div class="bottom-grid">
+
+    <div class="panel">
+      <h2>WAREHOUSE FLOOR MAPS</h2>
+      <p class="subtitle">Click the blue arrow to open the relevant building map</p>
+      <div class="maps" id="maps"></div>
+    </div>
+
+    <div class="panel">
+      <h2>DETAILED WAREHOUSE AREA AVAILABILITY</h2>
+      <p class="subtitle">Available SQ. FT., Estimated CBM and Availability Percentage</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>BUILDING</th>
+              <th>FLOOR LEVEL</th>
+              <th class="num">TOTAL SQ. FT.</th>
+              <th class="num">NON-SELLING</th>
+              <th class="num">RENTED</th>
+              <th class="num">UTILIZED</th>
+              <th class="num">AVAILABLE</th>
+              <th class="num">EST. CBM</th>
+              <th class="num">AVAILABLE %</th>
+            </tr>
+          </thead>
+          <tbody id="detailsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section id="availabilityPage" class="hidden">
+
+  <div class="availability-hero">
+    <div>
+      <h2>WAREHOUSE AREA AVAILABILITY</h2>
+      <p>Building-wise and floor-wise storage availability</p>
+    </div>
+
+    <div class="hero-number">
+      <strong id="availableTotal">0</strong>
+      <span>TOTAL AVAILABLE SQ. FT.</span>
+    </div>
+  </div>
+
+  <div class="floor-summary-grid" id="floorSummary"></div>
+
+  <div class="panel">
+    <h2>BUILDING-WISE FLOOR AVAILABILITY</h2>
+    <p class="subtitle">Ground Floor and First Floor available space</p>
+    <div class="all-floors" id="allFloors"></div>
+  </div>
+
+  <p class="note">
+    Estimated Available CBM = Available SQ. FT. × 1.7 ÷ 25.
+  </p>
+
+</section>
+
+</main>
+
+<script>
+/* MOBILE-ONLY HAPTIC FEEDBACK (Android browsers supporting Vibration API) */
+function mobileChartVibrate() {
+  if (window.matchMedia("(max-width: 767px)").matches &&
+      typeof navigator.vibrate === "function") {
+    try { navigator.vibrate(40); } catch (e) { /* Unsupported device */ }
+  }
+}
+
+// Additional mobile feedback: refresh, map-view links, and opening selectors.
+// pointerdown fires when a dropdown is first touched, before a value is selected.
+document.addEventListener("pointerdown", function (event) {
+  if (event.pointerType !== "touch") return;
+  if (event.target.closest("#buildingFilter, #floorBuilding")) {
+    mobileChartVibrate();
+  }
+});
+
+// Delegated click handler also covers map links created dynamically.
+document.addEventListener("click", function (event) {
+  if (event.target.closest(".map-link, #refreshDashboardButton")) {
+    mobileChartVibrate();
+  }
+});
+
+// Floor summary and availability details are display cards; tapping provides feedback.
+// Use a single delegated listener to avoid duplicate vibration on nested elements.
+document.addEventListener("click", function (event) {
+  if (!window.matchMedia("(max-width: 767px)").matches) return;
+  if (event.target.closest(
+    "#availabilityPage .floor-summary-card, " +
+    "#availabilityPage .floor-detail, " +
+    "#overviewPage #floorPanel .floor-item, " +
+    "#overviewPage #floorPanel .floor-heading, " +
+    "#overviewPage #floorPanel .track"
+  )) mobileChartVibrate();
+});
+
+
+
+/* SMART TOUCH VISUAL FEEDBACK - works on iPhone and Android browsers.
+   Android vibration is retained in the existing event handlers. */
+(function installSmartTouchFeedback() {
+  const selector = [
+    '#overallChart', '#buildingChart',
+    '#overviewTab', '#availabilityTab',
+    '#buildingFilter', '#floorBuilding',
+    '#refreshDashboardButton', '.map-link',
+    '#overallLegend button', '#overallLegend .legend-row',
+    '#availabilityPage .floor-summary-card',
+    '#availabilityPage .floor-detail',
+    '#overviewPage #floorPanel .floor-item',
+    '#overviewPage #floorPanel .floor-heading',
+    '#overviewPage #floorPanel .track'
+  ].join(',');
+
+  function flash(target) {
+    if (!window.matchMedia('(max-width: 767px)').matches) return;
+    const el = target && target.closest ? target.closest(selector) : null;
+    if (!el) return;
+    el.classList.remove('gtl-touch-feedback');
+    void el.offsetWidth; // Restart animation on consecutive taps
+    el.classList.add('gtl-touch-feedback');
+  }
+
+  // pointerdown gives immediate feedback when a select menu first opens.
+  document.addEventListener('pointerdown', function(event) {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+      flash(event.target);
+    }
+  }, {passive:true});
+
+  // Keyboard/accessibility activation and browsers without Pointer Events.
+  document.addEventListener('click', function(event) {
+    if (event.detail === 0 || !window.PointerEvent) flash(event.target);
+  });
+
+  document.addEventListener('animationend', function(event) {
+    if (event.target.classList && event.target.classList.contains('gtl-touch-feedback')) {
+      event.target.classList.remove('gtl-touch-feedback');
+    }
+  });
+})();
+
+/* ========================================
+   GTL LOGO
+   Embedded GTL logo image
+======================================== */
+
+const GTL_LOGO =
+"data:image/webp;base64,UklGRkAEAABXRUJQVlA4IDQEAACQFQCdASpQAE0APwF2rlCrKCQip7VeSWAgCWQ8hSCB+zaOhIeiv/Z7rjnsrKJ/0tBHasFfT05yItPGl+Xb8o+XtAR8D/Rt25eKK+C9vJTWOhX1mNcepYkl4xjXKdMdnYAT1r06qOF/+tdMu3bqcfp7J3Sc/get89K+k7tg99Yep1+CzwjZJDdUnd6VFkabhHMN8iF4L+AJsj+2/WTxpC4m4wq/hTdoGs7Fhyci2Ks94/+tcGAAAP78dxgxkFNx6nrJMWOSxMfDYdPUHq/+xCJV8Zp183tiojVMEChqAYW8sdduc91bl7gNSaRuuMg6Jf3Ai2duZIPduCmFrzJAHkGIuGdzGdRzH6CUGtuGjlRx8utgkG+70LBtmuBl2f+1B4UoPT7Vw0tbq2EwuQSRIhO/4Q6CMl1rOcSIMCqkYy9RJeEQj9jRTj2jFMl3hVJebRBafju2GVPmlPtmtU/qpa9AlLqCRdgKuf8kfxVNnadY5X9F7tWlZ+8o41eio2cSxmz43z9T7Zq88h+4DvHBIN19gbm1xufmadmt5/tFzPbTdZaaPugM69Rzz7/uEq6OtXEyjbfKlg5aSltyaXg/iRfQLjRr+D+YjKfCquuyJjrzRpfYvUWfPMOUnvbGI0pubXDIkG6MlhjfNeMM+rrgBWJJ1SKqr+bVXCSAWvPdaGpaZXwBpIqEG3eo/SvK4PztX+3VWMLRzpRxtmhuen9DYz1VJIGPeYmndmu501DC7rpv6M0x4a0ot+30HyqEozUVZFfJ8ImI4VQ5Nga4vqRCWMIoi0tpVlQN0V54MWAa8bmJzbwMxgoWaBfzIGGOBy2ZVXGqKdnJFbxe6msfCHx7Af6T2rnOJ3Z+jxnDhib6u9JhAVHebk7B5s8Ub2jk19awVZpWU01TWWv3sf0rpTWkulw1KFbW2SIE2tY2MrJnGYQDXAEAPDsOMVR6RtWjaxrqxOWtlyvwGqC8QfepxgcFOi+ncUpe5cs1giWygTx2OZDW7Z1BT8kTa6/uEzaCoxAgjCwtOTgfqs0Vy3qo2atOQ1l+ishSR/1up4FS+rP6yFehGYdQgsKvJidYfLaeMPKczcxDmIGUaNB/vD3P/r9pS5ZHVgvZRXjIjjlJv20QalA/bZxL4FATjR/dYEuqhSFFd4SZFkElAXt5/PW2lTXnZe0/kw8ffish68OOC3DyGInsK/Q6zCF5xE0rtVhjyiCQii/c2DjExvcpAmjyeb2eWF3GiErv2ZRcHyZLiRE4w9FS8NqieoC+pcczshNLixIhGWUNY0f1WZo9gHla6qOoCLC4G4iAe1W4yOqxdieLBEavpSuUB3c0FPfsN1p4r8QpY4MLCG9mhapa3THYyhAcdA+c0FUrZXwEVRIUiILJgDo0/Z4tJNPEdJiFa288RLUeuP3aAcVfBaasqwUZZ8cHOAiWfsAAAA==";
+
+/* ========================================
+   WAREHOUSE NAMES
+======================================== */
+
+const ORDER = [
+  "GTL BUILDING",
+  "GREEN BUILDING",
+  "B3 BUILDING",
+  "B2 BUILDING",
+  "B1 BUILDING",
+  "US LANKA",
+  "INDOLANKA"
+];
+
+/* ========================================
+   GOOGLE DRIVE FLOOR MAP LINKS
+======================================== */
+
+const MAP_LINKS = {
+  "GTL BUILDING":
+    "https://drive.google.com/file/d/1dGXHSAYwgwDw1s--qoN33uD-_hyMMgU3/view?usp=drive_link",
+
+  "GREEN BUILDING":
+    "https://drive.google.com/file/d/1f56KiukfNaME3Iwg41pmsxG7ckyUT5rb/view?usp=drive_link",
+
+  "B3 BUILDING":
+    "https://drive.google.com/file/d/1WoAJ9vhNDntgwH__di1I8aiComXfu5c0/view?usp=drive_link",
+
+  "B2 BUILDING":
+    "https://drive.google.com/file/d/1sHH6wSlBJUNAjGQDBrzIVo2OMdgiP1f0/view?usp=drive_link",
+
+  "B1 BUILDING":
+    "https://drive.google.com/file/d/1Rs7PK1HT1nFwBCZDZV5PZwLxyYmgFX7n/view?usp=drive_link",
+
+  "US LANKA":
+    "https://drive.google.com/file/d/1Dv8htG-dUJ8j_sCST0d0IUoEYQl3JXpA/view?usp=drive_link",
+
+  "INDOLANKA": ""
+};
+
+/* ========================================
+   WAREHOUSE THUMBNAILS
+   Compact embedded image previews
+======================================== */
+
+const INDOLANKA_THUMBNAIL = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTYwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI2U1ZjRlZiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2I5ZDVkMiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMTYwIiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTMwIDgwIDIwMCAyNyAzNzAgODB2NjJIMzBaIiBmaWxsPSIjNzc5YzlmIi8+PHBhdGggZD0iTTIwIDgwIDIwMCAxOSAzODAgODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzM1NWM3ZCIgc3Ryb2tlLXdpZHRoPSIxMSIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjxyZWN0IHg9Ijc1IiB5PSI5MSIgd2lkdGg9Ijc0IiBoZWlnaHQ9IjUxIiBmaWxsPSIjZThmMWY4Ii8+PHJlY3QgeD0iMTY0IiB5PSI5MSIgd2lkdGg9Ijc0IiBoZWlnaHQ9IjUxIiBmaWxsPSIjZThmMWY4Ii8+PHJlY3QgeD0iMjUzIiB5PSI5MSIgd2lkdGg9Ijc0IiBoZWlnaHQ9IjUxIiBmaWxsPSIjZThmMWY4Ii8+PHBhdGggZD0iTTAgMTQ1aDQwMCIgc3Ryb2tlPSIjMzU1YzdkIiBzdHJva2Utd2lkdGg9IjYiLz48dGV4dCB4PSIyMDAiIHk9IjY5IiBmb250LXNpemU9IjIwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSI+SU5ET0xBTktBPC90ZXh0Pjwvc3ZnPg==";
+
+const PHOTO_DATA = [
+"UklGRjoCAABXRUJQVlA4IC4CAAAwDgCdASpkACIAPwFmrFArJSQmrzZtEWAgCUAYuAaZ/Kf9+UKPfmTJth/6rgORNPGoK+ktp3yVQxPa+zau877dOiJjPg9ylbX6e+ks6uYTdKqeIZ6se+PpbWEneHVCXdJylsQrMNSp0gIiW2x9N8ygcXsf2/RhpkimQAD+6GbVc2Cb/JqEB1HdjSd1LlYAk+Ct6ROAR3sE0sdXiyoGjsey28h5X7Y+nsZegQKnjnLrOxX/bSwKAuVtGfNax0j/J7w6aQG/cMxv/YY7umVtIemI8owE3ihiIrOpwpZJL2uhJFKu9nMOrcr9iO08e9qgj1i9IQEJoG0a2mplmbPfw9zdK9b+L6NKlkr4ecxHDM/1OGUXYQQtnoynnY/DaFC4dqNhd1PaZOxJXLH+3sELxvpgZvYcqK2or8+M5FoqkYrU7NqQrTZ7vAoUBs2afcqtO0ZtA33fF2r1DwXZqO+cY+OAo/p2QKVzfxEa/ExD80w2C/l4ooFmlyH+NJCBCR38/F5FFyY7grp23Ck++EvttPTh/VPGPj+eXxyUPUKW8gP7rIgtEWS6p48/TQ8EEOIjVp/zQwfr1kAt7YA/3MPsp6lF2UPsMHfnl4FT/A8eP6DXFJUW4IzmPq1bHrUuGhFMBni5SY8AUos9qlCNrvXh9eCoAd73u8FJ27DZ0MoN2kxkF4vqvYmFkhHYkWrF3ZpHFa5xqq8gugmWyFdheHpLr3pd4CI2Bc8Ot1a/T1HAAAA=",
+"UklGRlQCAABXRUJQVlA4IEgCAABQDgCdASpkACIAPwFyrlArJyQmqTgN2WAgCWIAwRA5kTD9cW5pcV+rbgJ9YcPwj+TCqh/UfcxMN21IBluouBmS22Pphsq7GkVJ34vwJwgGT5+nCIh7QrJFtiYkebFpWMt/H5oBHXc12f3P/fgLEbAUHUWCA20C3vxDVGAA/u5bGIYR/Lne8T1uOQXcOuYmTfluz4zOpeIn7cdtSKz+5Tf2x+JlnS9YsE0fIdVsagAO9jCz90l+HkBeCCtrxPdqlholx+rNAq1Eb5ziYH29zI4xee8kk7U3TQ16DiVF7FGiRa2Fx6Pam2Rhf60O3mw55em1TyoNd4prPYE5hqj9t1MXOgJZNK6A92wyCJ0tHI3Aq1xBSpMgzeD0imGEAm0QNYZeMXkYw/VgO7eb8dIO5LzM78n2jwIa2Mx44d97JPYtV4IIsAGE2XbcujSHvkeqQi/BrGpuTwCJirLL3ftYzMRwBTa/d55QY/GmcB3Zvt1ox/32nrF26z+LBESztOzxMvYTslffBL1zZ4Isj0O0PR4g9VlhmZ4MkKmAuahfSqTt3vjbBSC4GOJ6QCBkNOgCY6gcyMxkQIR0KDubk3pG2RTW9kqXrHJnu7RfO56zqI9snobfFMmOxIzuwSGrYDsmbNj5goPH+64HbO8CJfE1BkAba5h7IIKURTD+J1egjaGo8oaCLvF9iEyJ68iArebL5s6mQaeW1gpGaH/bqie3PfX12mTxmfohGmtz3uDfOD+NZJ41PY4GX/uUj/rFn+wDxG6cspaSSLAAAA==",
+"UklGRh4CAABXRUJQVlA4IBICAABwDQCdASpkACIAPwFyr1IrJqQiqrJMkWAgCUAXUAehLhqgPM1OjDUVz2hf5dYQy1CPXF1V26/owV3VDeHtmfSdjve4Pj90l7yaFDdcXzgEjqNXp6Z5LXX04WsROLXd1E/Qq6rCgudkXw8TJ6EQY3QEFvk18AD+6GW/B/2ve+g8jFOO3/JDQEnpkE5bjg13+NplDyUwG1bQnqMNpN+FuSjmMgGyerTkCGWU2wiiAP+EcVOfK21oXL9SmSA3IYslyEZNu7iQHxOjAuqYpAwY64zrzZvEaP7Ma4ZgJonRlCLoHKMvsmnXlHXlvAwHWZ2N/DpvpJZtBWlY95/SZNCeafzkfsdjKWXN2bjy1Gi502kw5xgaa+H3Eefd+JU7vMfdygrfJw7miymdROKIeBEj84OTOxFonu7oK+tPVyqVXGcI5EtlBHfBHLEUAAyyBCKOOeM1b+s+9YTJ27j8dGgxQ9HphmxPRHc3u7SMKAFYPKKfz2QQ+uE3QFFMGkjHVmrzn2ICOxHJmhI4y3MoCvcOQ0NGWs9UTek9Wi9j0PH34lMzDmNeJYfAFRdo6y81CBO5xsp+mFdUQeO1yhGm6yufrB1ItAlBhWmomBnawPctd3F7k4Wcz8wgKnkSOo/Dajm5pAEN62DWYyy8Xq9WsVNzTV9YYwytUj5Ajsi4BhNrJc4RY50z+B9+RTgY4t8s51w/gF/AAA==",
+"UklGRiICAABXRUJQVlA4IBYCAAAwDQCdASpkACIAPwFsrFArJiQisNRrMWAgCUAYGofZ3vclK8Lb0a+Dnyq/b/yDiD7uBO0wnBlNOSZHyRlTPGcP8VH7+PpYHnRAsNOeTFbmeGIzsWpgaCpQdMR9mtOUWFIZiZN/y2l1THE24HYwiOm4MgAA/uiR2Dt2j00NKgi1e3Sn4/CgB81+FivMSu/arw7Aa8UPZ9sSCDU8xmpEC/VHPVSFXBftl1uSKiW212bUOXcqH2qVdqNTbd2e3/sREu3Ehcnl5CoK0IPVMcKeIwlAta4z9ykxdh52KiZflKUa+wAgN+EvRjfCRRG+jMeW2MzhwZ+crKHV0O546xX1EBznZHoNc1K+RoHXab5+fq5qBGH2SK+I3BkP+Hehwp/r/yrWo+mARumkxEf77ssBCZKZNP7EPGGmYSmQoTiERMwXHCwqkqyqpxrvOjaMlRnEsDMVTCP5EzKP896DCrEL11/WAr0L15NvIqgXhQHhZBKeZ2FZKMG7iSZI/fXwgt4TIWMlyRoHVKLxWEeEfpQp60n31becMZbRjG7DuqszEqiUAfjWhKMeBE8qF69AwayD17axJUZQYb/6rnE3AEngC2g9IrfFkoLo15oaVMzdtLow8tBUpkGyjKxMEIawL4o6GiSeOslTeWM2nNLicUl9QM0RMCIv6P7HVCc5t44N1H2XlaPMWCT6Z4fWTNLuGiqQbP0qmwAiAAA=",
+"UklGRu4BAABXRUJQVlA4IOIBAADQDACdASpkACIAPwFyslErJySirDQLEWAgCWMAwQF/8P6y4N1ctsOf/0p0l8KXj/+euN+AZ01uhW6xwhonLkym83TrtEFEgJr+73oX/khslJpZfLSQoq8QImox6Uf/VIl4kFED+5OXXYMEcGrEBQAA/uuKbtU84+FD627WdRO96ITzwQB3n9D8kdwWr2XdTn3KOgNSUfM+cU5HxTwpsrDrxoT1cLRm6k47ekWOtPMJYLlL/JUNZ23AUzRFcy1Mlo1j3v91LM90rX8kARj4FX4s3sU5eLnW4jWTCnKn8JZH++ZXa9j6yLekHK4B+IZetVSKdbqlUgd1Z49TECAKA0ZjczVw2c88cUb22tDFK2ZF2feMYmUfdmo1kz/7pOxUUpO2YT6DhsxxiT4oK3pFn88tcIQJU7RXXXYMQ1RfP5x2AiNqJ/oZjST4p6D15ov4L7sEmxvzBYtT7wJc8+aAgzhDM4gJQCoxOh8Yx/1/WE+QsYPd8M7L70r6yMQPhWNsPtqvzQvmbeZ11bC/BONCYL8DNPnjb7o3xDam6qAK4nLYrD6wpYRbjmSq5eYZd6lj3vCdF3U5YDxKhawcJpPdHG0+bD0JBGpAIz4ho8istAY1D1nNmRzqE+7WASfqWRkM39AAAA==",
+"UklGRiICAABXRUJQVlA4IBYCAACQDQCdASpkACIAPwFuslArJqUirbcaqWAgCUAY5cJrfwdXFt/SxoG8nG2pqBvfPmqf3kXn/pTyLBiyuPhyelhCgd9ljTKgpKfJ6JQcyVz1xQEikF9JixwEqQt0mcI8/pi39bsDZ5wEWffQzvEtr1HppImjHBAA/uHsCcr9D/2GzMtlWZnEJ75HCFLEbr+QbppXV+2udBOZvTar2AoYAx1ndTgqSwrnzWXwI70IPEVdbSAwPvKnNgstwpSHpJl8SdceyzE3OXbR8qzfGiNdrpSu/zaRgM0IqO48L8hdhvyoxdUCnxZHFpyUy8kQeC84wrgzcIO7nDAfR5nW+NKTW5LbjQGXRVrR7a8zpQoM2107OFoERuoGw0kOzLcWRMnNQ3OBVV8KlhTC0ie6ETHLgX/r3L0XeC39HNd+EuN5ygwfryfGZSSNv4/kQlxa3HaA1rBPnlyONUJMLBar5gwMG6NWn7m5mJuytLcQ8wOrgz1GZq91HP3JJcbFzvfK41dpW/nS9a9bcEmkdA419j2z4i9pO2wb95ZN3WjHUQArUTlKCLwpeubbOoJI/Cy8OrywrNB3otSSMrHawdnFRT1ITazIIG51xbES52452vDXd2l7awtO/bukb/o1WivIt162C+VpRSeVzCcfNNz6nAkWx1wJ9twqID4EOfr9Cc5bNRRkOsDt9Ie40Nwj8lFUNF2ydIx0BQxIIAA=",
+"UklGRuwBAABXRUJQVlA4IOABAACQDACdASpkACIAPv1srk6rJiSps9TpAWAfiWMAwqG3P/S8ULIbbX8OoE1Rfi3EuECOgi1fYapTELhtU4puHX7NCs5z9NUAr2UMh+V+4KcKcbn//B7Q22NdyQRX1pG18rlKuZjlWbRWS2LMFuagAP7025TX5Bk7hJf8gRmePg4kf7Pjcbwu8cnaeoyHcAIdPCvB8ReT/UKA/gf6SbQgDUWeQ3hL29M3KJ9gWqsBAdsrDxfOpDvgaI3V2N4QrsOidGaq9i4sRRDu+5u5MlkVSr/HTxMpA8EKWbHSFPzkJtW4TGevicgala7QcImf/h4BLOEl7ebIQUL1F+WmbBnpV+F9VNyJ1uwxSZuDPw+1D2iZ85pPCfE3+7PJsX8+G0rrqIpRHftjGWqTqwGptWWpX7VtQzbeEX6ce/UlY54lFLZ3zw0zglYtOt7xuuD6MzwUt5eqI3uGjhtKA4UsX78vQbJdT/q2hOFnduvlIqLJKR5VdRTJtiWSlbchh5cfmjDWmhbQKmqmz6kLToYWamySWETDX8F1NLw806vXfVequ3tBSlqL83VGXUjs+mSuL3h9jgF/z0O0CkIEJ0V8zcwasLpHsXhOp8F9JpFUS4YR97OpsofOPKrxSdfTvRyiVNRgAA="
+];
+
+
+const WAREHOUSE_ILLUSTRATIONS = {
+  'GTL BUILDING': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0NERUFGMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjMjM0Rjc2IiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM1RTkyQjQiIHN0cm9rZT0iIzIzNEY3NiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzIzNEY3NiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiMyMzRGNzYiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjMjM0Rjc2IiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjMjM0Rjc2IiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkdUTCBCVUlMRElORzwvdGV4dD48cGF0aCBkPSJNMCAyNDBINjAwIiBzdHJva2U9IiMyMzRGNzYiIHN0cm9rZS13aWR0aD0iOCIgb3BhY2l0eT0iLjU1Ii8+PC9zdmc+",
+  'GREEN BUILDING': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0RERjVFOCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjMjM3NjVDIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM3MEIzOUEiIHN0cm9rZT0iIzIzNzY1QyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzIzNzY1QyIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiMyMzc2NUMiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjMjM3NjVDIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjMjM3NjVDIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjkiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkdSRUVOIEJVSUxESU5HPC90ZXh0PjxwYXRoIGQ9Ik0wIDI0MEg2MDAiIHN0cm9rZT0iIzIzNzY1QyIgc3Ryb2tlLXdpZHRoPSI4IiBvcGFjaXR5PSIuNTUiLz48L3N2Zz4=",
+  'B3 BUILDING': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0UwRThGQiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjNDc1QThDIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM5MUEyRDEiIHN0cm9rZT0iIzQ3NUE4QyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzQ3NUE4QyIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiM0NzVBOEMiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjNDc1QThDIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjNDc1QThDIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkIzIEJVSUxESU5HPC90ZXh0PjxwYXRoIGQ9Ik0wIDI0MEg2MDAiIHN0cm9rZT0iIzQ3NUE4QyIgc3Ryb2tlLXdpZHRoPSI4IiBvcGFjaXR5PSIuNTUiLz48L3N2Zz4=",
+  'B2 BUILDING': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0UyRjFGNyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjNDA2QjgwIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM4QkFGQkUiIHN0cm9rZT0iIzQwNkI4MCIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzQwNkI4MCIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiM0MDZCODAiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjNDA2QjgwIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjNDA2QjgwIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkIyIEJVSUxESU5HPC90ZXh0PjxwYXRoIGQ9Ik0wIDI0MEg2MDAiIHN0cm9rZT0iIzQwNkI4MCIgc3Ryb2tlLXdpZHRoPSI4IiBvcGFjaXR5PSIuNTUiLz48L3N2Zz4=",
+  'B1 BUILDING': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0YxRThGNSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjNzg2MjhCIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiNCMjlEQzAiIHN0cm9rZT0iIzc4NjI4QiIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzc4NjI4QiIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiM3ODYyOEIiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjNzg2MjhCIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjNzg2MjhCIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkIxIEJVSUxESU5HPC90ZXh0PjxwYXRoIGQ9Ik0wIDI0MEg2MDAiIHN0cm9rZT0iIzc4NjI4QiIgc3Ryb2tlLXdpZHRoPSI4IiBvcGFjaXR5PSIuNTUiLz48L3N2Zz4=",
+  'US LANKA': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0RGRjNGNyIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjMjc2RTgxIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM4MEI5QzciIHN0cm9rZT0iIzI3NkU4MSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzI3NkU4MSIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiMyNzZFODEiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjMjc2RTgxIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjMjc2RTgxIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlVTIExBTktBPC90ZXh0PjxwYXRoIGQ9Ik0wIDI0MEg2MDAiIHN0cm9rZT0iIzI3NkU4MSIgc3Ryb2tlLXdpZHRoPSI4IiBvcGFjaXR5PSIuNTUiLz48L3N2Zz4=",
+  'INDOLANKA': "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iMjYwIiB2aWV3Qm94PSIwIDAgNjAwIDI2MCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0U1RjRFRiIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJ3YWxsIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiNmOWZkZmYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiOWQyZGYiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjI2MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjMwMCIgY3k9IjIyOSIgcng9IjI1NyIgcnk9IjE2IiBmaWxsPSIjMjU0MzVlIiBvcGFjaXR5PSIuMTMiLz48cGF0aCBkPSJNNjIgMTExIDI5OCA1MyA1MzggMTExIDUzOCAyMTkgNjIgMjE5WiIgZmlsbD0idXJsKCN3YWxsKSIgc3Ryb2tlPSIjMzU1QzdEIiBzdHJva2Utd2lkdGg9IjQiLz48cGF0aCBkPSJNNDUgMTEyIDI5OCAzOSA1NTUgMTEyIDUzOCAxMjcgMjk4IDY3IDYyIDEyN1oiIGZpbGw9IiM3NzlDOUYiIHN0cm9rZT0iIzM1NUM3RCIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PHJlY3QgeD0iOTEiIHk9IjE0NyIgd2lkdGg9IjExMyIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiM3ODljYjAiIHN0cm9rZT0iIzM1NUM3RCIgc3Ryb2tlLXdpZHRoPSIzIi8+PHJlY3QgeD0iMjQ0IiB5PSIxNDciIHdpZHRoPSIxMTMiIGhlaWdodD0iNzIiIHJ4PSIzIiBmaWxsPSIjNzg5Y2IwIiBzdHJva2U9IiMzNTVDN0QiIHN0cm9rZS13aWR0aD0iMyIvPjxyZWN0IHg9IjM5NyIgeT0iMTQ3IiB3aWR0aD0iMTEzIiBoZWlnaHQ9IjcyIiByeD0iMyIgZmlsbD0iIzc4OWNiMCIgc3Ryb2tlPSIjMzU1QzdEIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBzdHJva2U9IiNkOWU5ZjAiIHN0cm9rZS13aWR0aD0iMyI+PHBhdGggZD0iTTkzIDE2NWgxMDlNOTMgMTg1aDEwOU05MyAyMDVoMTA5TTI0NiAxNjVoMTA5TTI0NiAxODVoMTA5TTI0NiAyMDVoMTA5TTM5OSAxNjVoMTA5TTM5OSAxODVoMTA5TTM5OSAyMDVoMTA5Ii8+PC9nPjxyZWN0IHg9Ijg3IiB5PSI3NSIgd2lkdGg9IjQyNiIgaGVpZ2h0PSI1MiIgcng9IjEwIiBmaWxsPSIjMzU1QzdEIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMyIvPjx0ZXh0IHg9IjMwMCIgeT0iMTA5IiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzUiIGZvbnQtd2VpZ2h0PSI4MDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPklORE9MQU5LQTwvdGV4dD48cGF0aCBkPSJNMCAyNDBINjAwIiBzdHJva2U9IiMzNTVDN0QiIHN0cm9rZS13aWR0aD0iOCIgb3BhY2l0eT0iLjU1Ii8+PC9zdmc+"
+};
+
+/* ========================================
+   CHART COLORS
+======================================== */
+
+const KEYS = ["non","rented","used","balance"];
+const LABELS = ["Non-Selling","Rented","Utilized","Available"];
+const COLORS = ["#A84C70","#269B78","#477DA8","#E4B24C"];
+
+let rows = [];
+let charts = {};
+let activePage = "overview";
+let refreshTimer = null;
+let loading = false;
+
+const $ = id => document.getElementById(id);
+
+function num(value) {
+  const n = Number(String(value ?? 0).replace(/,/g,""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmt(value) {
+  return num(value).toLocaleString("en-US",{
+    maximumFractionDigits:0
+  });
+}
+
+function dec(value) {
+  return num(value).toLocaleString("en-US",{
+    maximumFractionDigits:1
+  });
+}
+
+function sum(data,key) {
+  return data.reduce((total,row)=>total+num(row[key]),0);
+}
+
+function pct(value,total) {
+  return total>0 ? value/total*100 : 0;
+}
+
+function cbm(sqft) {
+  return num(sqft)*1.7/25;
+}
+
+function floorType(value) {
+  const f=String(value).toLowerCase();
+
+  if(f.includes("ground")) return "ground";
+
+  if(f.includes("first") || f.includes("mezz"))
+    return "first";
+
+  return "other";
+}
+
+function names(data) {
+  return [...new Set(data.map(r=>r.building).filter(Boolean))]
+    .sort((a,b)=>{
+      const ai=ORDER.indexOf(a);
+      const bi=ORDER.indexOf(b);
+
+      return (ai<0?999:ai)-(bi<0?999:bi);
+    });
+}
+
+function filtered() {
+  const selected=$("buildingFilter").value;
+
+  return selected==="ALL"
+    ? rows
+    : rows.filter(r=>r.building===selected);
+}
+
+function group(data) {
+  return names(data).map(name=>{
+    const d=data.filter(r=>r.building===name);
+
+    return {
+      name,
+      total:sum(d,"total"),
+      non:sum(d,"non"),
+      rented:sum(d,"rented"),
+      used:sum(d,"used"),
+      balance:sum(d,"balance")
+    };
+  });
+}
+
+/* ========================================
+   DOUGHNUT CENTER TEXT + PERCENTAGES
+======================================== */
+
+const donutLabels = {
+  id:"gtlDonutLabels",
+
+  afterDatasetsDraw(chart) {
+    if(chart.config.type!=="doughnut") return;
+
+    const values=chart.data.datasets[0].data;
+    const total=values.reduce((a,b)=>a+num(b),0);
+
+    if(!total) return;
+
+    const meta=chart.getDatasetMeta(0);
+    const ctx=chart.ctx;
+
+    ctx.save();
+
+    meta.data.forEach((arc,i)=>{
+      const percentage=pct(values[i],total);
+
+      if(percentage<5 || (chart.canvas.id==="overallChart" && !overallActive(i))) return;
+
+      const angle=(arc.startAngle+arc.endAngle)/2;
+      const radius=(arc.innerRadius+arc.outerRadius)/2;
+
+      ctx.fillStyle="white";
+      ctx.textAlign="center";
+      ctx.textBaseline="middle";
+      ctx.font="bold 11px Arial";
+
+      ctx.fillText(
+        percentage.toFixed(1)+"%",
+        arc.x+Math.cos(angle)*radius,
+        arc.y+Math.sin(angle)*radius
+      );
+    });
+
+    const arc=meta.data[0];
+
+    if(arc) {
+      ctx.textAlign="center";
+      ctx.fillStyle="#073b4e";
+
+      ctx.font="bold 10px Arial";
+      ctx.fillText(chart.canvas.id==="overallChart" && selectedOverallAreas!==null ? "HIGHLIGHTED" : "TOTAL AREA",arc.x,arc.y-20);
+
+      ctx.font="bold 16px Arial";
+      ctx.fillText(fmt(chart.canvas.id==="overallChart" && selectedOverallAreas!==null ? values.reduce((a,v,i)=>a+(overallActive(i)?num(v):0),0) : total),arc.x,arc.y+2);
+
+      ctx.font="10px Arial";
+      ctx.fillText("SQ. FT.",arc.x,arc.y+20);
+    }
+
+    ctx.restore();
+  }
+};
+
+if(typeof Chart!=="undefined") {
+  Chart.register(donutLabels);
+}
+
+function destroyCharts() {
+  Object.values(charts).forEach(chart=>chart.destroy());
+  charts={};
+}
+
+/* ========================================
+   KPI VALUES
+======================================== */
+
+function renderKPIs(data) {
+  $("kTotal").textContent=fmt(sum(data,"total"));
+  $("kNon").textContent=fmt(sum(data,"non"));
+  $("kRented").textContent=fmt(sum(data,"rented"));
+  $("kUsed").textContent=fmt(sum(data,"used"));
+  $("kBalance").textContent=fmt(sum(data,"balance"));
+}
+
+
+// Corporate soft-3D finish for the building-wise stacked bars.
+const BUILDING_SOFT_3D = [
+  {light:"#D787A6",base:"#A84C70",dark:"#783650"},
+  {light:"#7BD9B6",base:"#269B78",dark:"#187258"},
+  {light:"#9DC8E8",base:"#477DA8",dark:"#315D83"},
+  {light:"#FFE3A2",base:"#E4B24C",dark:"#B88A34"}
+];
+const gtlBuildingSoftDepth={
+  id:"gtlBuildingSoftDepth",
+  beforeDatasetDraw(chart){
+    if(chart.canvas.id!=="buildingChart") return;
+    chart.ctx.save();
+    chart.ctx.shadowColor="rgba(20,57,78,.15)";
+    chart.ctx.shadowBlur=4;
+    chart.ctx.shadowOffsetY=2;
+  },
+  afterDatasetDraw(chart){
+    if(chart.canvas.id==="buildingChart") chart.ctx.restore();
+  }
+};
+if(typeof Chart!=="undefined") Chart.register(gtlBuildingSoftDepth);
+
+/* ========================================
+   BUILDING-WISE STACKED BAR CHART
+======================================== */
+
+function renderBuildingChart(data) {
+  const buildings=group(data);
+
+  charts.building=new Chart($("buildingChart"),{
+    type:"bar",
+
+    data:{
+      labels:buildings.map(b=>b.name),
+
+      datasets:KEYS.map((key,i)=>({
+        label:LABELS[i],
+        data:buildings.map(b=>pct(b[key],b.total)),
+        backgroundColor:(context)=>{
+          const area=context.chart.chartArea;
+          if(!area) return COLORS[i];
+          const palette=BUILDING_SOFT_3D[i];
+          // Consistent rich colours for EVERY building row.
+          // Horizontal shading prevents top rows looking washed out.
+          const gradient=context.chart.ctx.createLinearGradient(area.left,0,area.right,0);
+          gradient.addColorStop(0,palette.base);
+          gradient.addColorStop(.55,palette.base);
+          gradient.addColorStop(1,palette.dark);
+          return gradient;
+        },
+        barThickness:18,
+        borderRadius:3,
+        borderSkipped:false,
+        borderWidth:0
+      }))
+    },
+
+    options:{
+      indexAxis:"y",
+      responsive:true,
+      maintainAspectRatio:false,
+      animation:{duration:700},
+      onClick: (event, elements) => {
+        if (elements.length) mobileChartVibrate();
+      },
+
+      scales:{
+        x:{
+          stacked:true,
+          min:0,
+          max:100,
+          ticks:{
+            callback:v=>v+"%",
+            font:{size:10}
+          },
+          grid:{color:"#e3eee9"}
+        },
+
+        y:{
+          stacked:true,
+          ticks:{
+            autoSkip:false,
+            font:{size:10,weight:"bold"}
+          },
+          grid:{display:false}
+        }
+      },
+
+      plugins:{
+        legend:{
+          position:"bottom",
+          labels:{
+            boxWidth:12,
+            font:{size:10}
+          }
+        },
+
+        tooltip:{
+          callbacks:{
+            label: c => {
+              const building = buildings[c.dataIndex];
+              const areaKey = KEYS[c.datasetIndex];
+              const sqft = building ? Number(building[areaKey] || 0) : 0;
+              return c.dataset.label + ": " +
+                c.parsed.x.toFixed(1) + "% | " +
+                sqft.toLocaleString("en-US") + " SQFT";
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ========================================
+   OVERALL DOUGHNUT
+======================================== */
+
+// Interactive 3D highlight: keep ALL segment sizes and original percentages.
+// A click highlights the selected area(s); other segments fade in place.
+let selectedOverallAreas = null;
+let overallValues = [0, 0, 0, 0];
+
+const OVERALL_3D_PALETTE = [
+  {top:"#D77D9F",base:"#A84C70",dark:"#702744"},
+  {top:"#70D9B1",base:"#269B78",dark:"#126347"},
+  {top:"#9AC5E9",base:"#477DA8",dark:"#234B72"},
+  {top:"#FFE3A1",base:"#E4B24C",dark:"#9B6A20"}
+];
+
+function rgbaHex(hex, alpha) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${alpha})`;
+}
+
+function overallActive(index) {
+  return selectedOverallAreas === null || selectedOverallAreas.has(index);
+}
+
+function toggleOverallArea(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= LABELS.length) return;
+  mobileChartVibrate();
+  if (selectedOverallAreas === null) {
+    selectedOverallAreas = new Set([index]);
+  } else if (selectedOverallAreas.has(index)) {
+    selectedOverallAreas.delete(index);
+    if (!selectedOverallAreas.size) selectedOverallAreas = null;
+  } else {
+    selectedOverallAreas.add(index);
+  }
+  updateOverallSelection();
+}
+
+function showAllOverallAreas() {
+  mobileChartVibrate();
+  selectedOverallAreas = null;
+  updateOverallSelection();
+}
+
+function overallSegmentFill(ctx) {
+  const chart = charts.overall;
+  const area = chart && chart.chartArea;
+  const top = area ? area.top : 0;
+  const bottom = area ? area.bottom : 360;
+  return OVERALL_3D_PALETTE.map((p, i) => {
+    const gradient = ctx.createLinearGradient(0, top, 0, bottom);
+    const active = overallActive(i);
+    gradient.addColorStop(0, rgbaHex(p.top, active ? 1 : .12));
+    gradient.addColorStop(.46, rgbaHex(p.base, active ? 1 : .12));
+    gradient.addColorStop(1, rgbaHex(p.dark, active ? 1 : .12));
+    return gradient;
+  });
+}
+
+// Subtle dimensional extrusion drawn behind the original Chart.js arcs.
+// Unlike 3D libraries, this keeps chart labels and hit-testing reliable.
+const gtlDonut3D = {
+  id: "gtlDonut3D",
+  beforeDatasetsDraw(chart) {
+    if (chart.canvas.id !== "overallChart") return;
+    const meta = chart.getDatasetMeta(0);
+    const ctx = chart.ctx;
+    ctx.save();
+    meta.data.forEach((arc, i) => {
+      if (!overallValues[i] || !Number.isFinite(arc.startAngle)) return;
+      const p = OVERALL_3D_PALETTE[i];
+      const active = overallActive(i);
+      const r = (arc.innerRadius + arc.outerRadius) / 2;
+      ctx.beginPath();
+      ctx.arc(arc.x, arc.y + 10, r, arc.startAngle, arc.endAngle);
+      ctx.strokeStyle = rgbaHex(p.dark, active ? .82 : .08);
+      ctx.lineWidth = arc.outerRadius - arc.innerRadius;
+      ctx.lineCap = "butt";
+      ctx.shadowColor = "rgba(10,38,59,.22)";
+      ctx.shadowBlur = 11;
+      ctx.shadowOffsetY = 6;
+      ctx.stroke();
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+    });
+    ctx.restore();
+  }
+};
+if (typeof Chart !== "undefined") Chart.register(gtlDonut3D);
+
+function updateOverallSelection() {
+  const chart = charts.overall;
+  if (!chart) return;
+  // Crucial: DO NOT set unselected values to zero. Keep their positions.
+  chart.data.datasets[0].data = overallValues.slice();
+  chart.data.datasets[0].backgroundColor = overallSegmentFill(chart.ctx);
+  chart.data.datasets[0].borderColor = "transparent";
+  chart.update("none");
+
+  const legend = $("overallLegend");
+  if (!legend) return;
+  const total = overallValues.reduce((a,b)=>a+b,0);
+  legend.innerHTML = LABELS.map((label, i) => {
+    const active = overallActive(i);
+    const percent = total > 0 ? (overallValues[i] / total * 100).toFixed(1) : "0.0";
+    return `<button type="button" class="overall-legend-button ${active ? 'is-selected' : 'is-muted'}"
+      onclick="toggleOverallArea(${i})" aria-pressed="${selectedOverallAreas !== null && selectedOverallAreas.has(i)}" title="Highlight ${label}">
+      <span class="legend-name"><span class="swatch" style="background:${COLORS[i]}"></span>${label}</span>
+      <strong>${percent}%</strong>
+    </button>`;
+  }).join("") + `<button type="button" class="overall-show-all" onclick="showAllOverallAreas()">Reset — Show All Colours</button>`;
+}
+
+function renderOverall(data) {
+  selectedOverallAreas = null;
+  overallValues = KEYS.map(key => sum(data, key));
+  const total = overallValues.reduce((a, b) => a + b, 0);
+  charts.overall = new Chart($("overallChart"), {
+    type: "doughnut",
+    data: {
+      labels: LABELS,
+      datasets: [{
+        data: overallValues.slice(),
+        backgroundColor: COLORS,
+        borderColor: "transparent",
+        borderWidth: 0,
+        hoverOffset: 5,
+        spacing: 0
+      }]
+    },
+    
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+  cutout: "59%",
+
+  layout: {
+    padding: {
+      top: 14,
+      bottom: 20,
+      left: 12,
+      right: 12
+    }
+  },
+
+  animation: {
+    duration: 650
+  },
+
+  onClick: (event, elements) => {
+    if (elements.length) {
+
+      // Existing doughnut chart selection
+      toggleOverallArea(elements[0].index);
+    }
+  },
+
+  onHover: (event, elements, chart) => {
+    chart.canvas.style.cursor =
+      elements.length ? "pointer" : "default";
+  },
+
+  plugins: {
+    legend: {
+      display: false
+    },
+
+    tooltip: {
+      callbacks: {
+        label: c =>
+          pct(overallValues[c.dataIndex], total).toFixed(1) + "%"
+      }
+    }
+  }
+}
+
+  });
+  updateOverallSelection();
+}
+
+/* ========================================
+   FLOOR AVAILABILITY PROGRESS BARS
+======================================== */
+
+function floorHTML(data,building) {
+  const floors=[
+    {
+      type:"ground",
+      label:"Ground Floor",
+      color:"#269B78"
+    },
+    {
+      type:"first",
+      label:"First Floor",
+      color:"#477DA8"
+    }
+  ];
+
+  return floors.map(f=>{
+    const d=data.filter(r=>
+      r.building===building &&
+      floorType(r.floor)===f.type
+    );
+
+    if(!d.length) return "";
+
+    const available=sum(d,"balance");
+    const total=sum(d,"total");
+    const percentage=pct(available,total);
+
+    return `
+      <div class="floor-item">
+
+        <div class="floor-heading">
+          <span>${building} – ${f.label}</span>
+
+          <span>
+            ${fmt(available)} SQ. FT.
+            <small>${dec(cbm(available))} Est. CBM</small>
+          </span>
+        </div>
+
+        <div class="track">
+          <div class="fill"
+            style="
+              width:${Math.max(0,Math.min(100,percentage))}%;
+              background:${f.color};
+            ">
+          </div>
+        </div>
+
+        <div class="floor-percent">
+          ${percentage.toFixed(1)}% Available
+        </div>
+
+      </div>
+    `;
+  }).join("");
+}
+
+function renderFloorPanel() {
+  const building=$("floorBuilding").value;
+
+  $("floorPanel").innerHTML=
+    floorHTML(filtered(),building) ||
+    "<p>No floor data available.</p>";
+}
+
+function setupFloorFilter(data) {
+  const select=$("floorBuilding");
+  const previous=select.value;
+
+  select.innerHTML="";
+
+  names(data).forEach(name=>{
+    select.add(new Option(name,name));
+  });
+
+  if([...select.options].some(o=>o.value===previous)) {
+    select.value=previous;
+  }
+
+  renderFloorPanel();
+}
+
+/* ========================================
+   WAREHOUSE MAP CARDS
+======================================== */
+
+function renderMaps() {
+  const selected=$("buildingFilter").value;
+  const buildings=selected==="ALL"?ORDER:[selected];
+  const root=$("maps");
+
+  root.innerHTML="";
+
+  buildings.forEach(name=>{
+    const index=ORDER.indexOf(name);
+
+    const card=document.createElement("div");
+    card.className="map-card";
+
+    const image=document.createElement("img");
+    image.className="map-image";
+    image.alt=name+" Warehouse";
+    image.loading="lazy";
+
+    image.src = WAREHOUSE_ILLUSTRATIONS[name] || (index>=0 && PHOTO_DATA[index] ? "data:image/webp;base64,"+PHOTO_DATA[index] : "");
+    image.alt = name + " illustrated warehouse thumbnail (not an actual photograph)";
+
+    const info=document.createElement("div");
+    info.className="map-info";
+
+    const title=document.createElement("strong");
+    title.textContent=name;
+    info.appendChild(title);
+
+    if(MAP_LINKS[name]) {
+      const link=document.createElement("a");
+
+      link.className="map-link";
+      link.href=MAP_LINKS[name];
+      link.target="_blank";
+      link.rel="noopener noreferrer";
+      link.title="Open "+name+" Warehouse Map";
+      link.textContent="➜";
+
+      info.appendChild(link);
+    } else {
+      const pending=document.createElement("span");
+
+      pending.className="pending";
+      pending.textContent="PENDING";
+
+      info.appendChild(pending);
+    }
+
+    card.appendChild(image);
+    card.appendChild(info);
+    root.appendChild(card);
+  });
+}
+
+/* ========================================
+   DETAILED AREA TABLE
+======================================== */
+
+function renderTable(data) {
+  const root=$("detailsTable");
+  root.innerHTML="";
+
+  const buildingOrder=names(data);
+  const floorOrder={
+    ground:0,
+    first:1,
+    other:2
+  };
+
+  const sorted=[...data].sort((a,b)=>
+    buildingOrder.indexOf(a.building)-
+    buildingOrder.indexOf(b.building)
+    ||
+    floorOrder[floorType(a.floor)]-
+    floorOrder[floorType(b.floor)]
+  );
+
+  sorted.forEach(r=>{
+    const tr=document.createElement("tr");
+
+    const values=[
+      r.building,
+      r.floor,
+      fmt(r.total),
+      fmt(r.non),
+      fmt(r.rented),
+      fmt(r.used),
+      fmt(r.balance),
+      dec(cbm(r.balance)),
+      pct(r.balance,r.total).toFixed(1)+"%"
+    ];
+
+    values.forEach((value,i)=>{
+      const td=document.createElement("td");
+
+      if(i===8) {
+        const span=document.createElement("span");
+        span.className="pill";
+        span.textContent=value;
+        td.appendChild(span);
+      } else {
+        td.textContent=value;
+      }
+
+      if(i>=2) td.classList.add("num");
+      if(i===6) td.classList.add("available-value");
+      if(i===0) td.style.fontWeight="bold";
+
+      tr.appendChild(td);
+    });
+
+    root.appendChild(tr);
+  });
+}
+
+/* ========================================
+   GREEN / BLUE FLOOR SUMMARY CARDS
+======================================== */
+
+
+function renderFloorSummary(data) {
+
+  const floors = [
+    {
+      type: "ground",
+      title: "GROUND FLOOR – TOTAL AVAILABILITY",
+      color: "#176B56",
+      background: "#E8F7F1",
+      inner: "#FFFFFF"
+    },
+    {
+      type: "first",
+      title: "FIRST FLOOR – TOTAL AVAILABILITY",
+      color: "#355C7D",
+      background: "#EAF1F8",
+      inner: "#FFFFFF"
+    }
+  ];
+
+  $("floorSummary").innerHTML = floors.map(f => {
+
+    const d = data.filter(
+      r => floorType(r.floor) === f.type
+    );
+
+    const available = sum(d, "balance");
+    const total = sum(d, "total");
+
+    const metrics = [
+      ["AVAILABLE SQ. FT.", fmt(available)],
+      ["ESTIMATED CBM", dec(cbm(available))],
+      ["TOTAL FLOOR AREA", fmt(total)],
+      [
+        "AVAILABILITY (%)",
+        pct(available, total).toFixed(1) + "%"
+      ]
+    ];
+
+    return `
+      <div class="floor-summary-card"
+        style="
+          --floor-color:${f.color};
+          --floor-tint:${f.inner};
+          background:${f.background} !important;
+          border:2px solid ${f.color} !important;
+          border-top:6px solid ${f.color} !important;
+        ">
+
+        <h3 class="floor-summary-title">
+          <svg viewBox="0 0 48 48">
+            <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
+          </svg>
+          ${f.title}
+        </h3>
+
+        <div class="floor-metrics">
+
+          ${metrics.map(m => `
+            <div class="floor-metric"
+              style="
+                background:${f.inner} !important;
+                border:1px solid ${f.color}55 !important;
+              ">
+              <span>${m[0]}</span>
+              <strong>${m[1]}</strong>
+            </div>
+          `).join("")}
+
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+
+}
+
+/* ========================================
+   AREA AVAILABILITY PAGE
+======================================== */
+
+function renderAvailability(data) {
+  $("availableTotal").textContent=fmt(sum(data,"balance"));
+
+  renderFloorSummary(data);
+
+  $("allFloors").innerHTML=names(data).map(name=>`
+    <div class="floor-detail">
+      <h3>${name}</h3>
+      ${floorHTML(data,name)}
+    </div>
+  `).join("");
+}
+
+/* ========================================
+   MAIN RENDER
+======================================== */
+
+function renderDashboard() {
+  destroyCharts();
+
+  const data=filtered();
+
+  if(activePage==="overview") {
+    renderKPIs(data);
+
+    if(typeof Chart==="undefined") {
+      showError("Chart library could not be loaded. Please check your internet connection.");
+    } else {
+      renderBuildingChart(data);
+      renderOverall(data);
+    }
+
+    setupFloorFilter(data);
+    renderMaps();
+    renderTable(data);
+
+  } else {
+    renderAvailability(data);
+  }
+}
+
+/* ========================================
+   PAGE SWITCH
+======================================== */
+
+function switchPage(page) {
+  if (activePage !== page) mobileChartVibrate();
+  activePage=page;
+
+  $("overviewPage").classList.toggle(
+    "hidden",page!=="overview"
+  );
+
+  $("availabilityPage").classList.toggle(
+    "hidden",page!=="availability"
+  );
+
+  $("overviewTab").classList.toggle(
+    "active",page==="overview"
+  );
+
+  $("availabilityTab").classList.toggle(
+    "active",page==="availability"
+  );
+
+  renderDashboard();
+}
+
+/* ========================================
+   BUILDING FILTER
+======================================== */
+
+function updateBuildingFilter() {
+  const select=$("buildingFilter");
+  const previous=select.value;
+
+  select.innerHTML="";
+  select.add(new Option("All Warehouses","ALL"));
+
+  names(rows).forEach(name=>{
+    select.add(new Option(name,name));
+  });
+
+  if([...select.options].some(o=>o.value===previous)) {
+    select.value=previous;
+  }
+}
+
+/* ========================================
+   GOOGLE SHEETS LIVE DATA
+======================================== */
+
+function showError(message) {
+  $("error").textContent=message;
+  $("error").style.display="block";
+}
+
+// Paste your deployed Apps Script /exec URL here (not the /dev URL).
+const GTL_DATA_API_URL = "https://script.google.com/macros/s/AKfycbzEaYkq6bfNYSX8Zm1SMerXlQAZID7MLO8XZkuumubmSeMqdSUIWLHXN8FPArF9t00uKw/exec";
+let gtlJsonpScript = null;
+let gtlRequestTimeout = null;
+
+function gtlScheduleRefresh(seconds = 30) {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(loadData, Math.max(10, Number(seconds) || 30) * 1000);
+}
+
+function gtlClearRequest() {
+  clearTimeout(gtlRequestTimeout);
+  gtlRequestTimeout = null;
+  if (gtlJsonpScript) {
+    gtlJsonpScript.remove();
+    gtlJsonpScript = null;
+  }
+}
+
+
+// Compatibility: existing data-loading callbacks may still invoke this function.
+// No additional HTML splash is displayed on mobile or desktop.
+function gtlDismissInitialSplash() {}
+
+function gtlRequestFailed(message) {
+  gtlDismissInitialSplash();
+  gtlClearRequest();
+  loading = false;
+  showError(message);
+  $("updated").textContent = "Update failed";
+  gtlScheduleRefresh(30);
+}
+
+// Fixed callback: only warehouse summary rows, no Google account tokens.
+window.GTLReceiveDashboardData = function(result) {
+  if (!loading) return;
+  gtlClearRequest();
+  loading = false;
+  if (!result || !Array.isArray(result.rows)) {
+    gtlRequestFailed(result && result.error ? String(result.error) : "Invalid warehouse data received.");
+    return;
+  }
+  rows = result.rows.map(r => ({
+    building: String(r.building || "").trim().toUpperCase(),
+    floor: String(r.floor || "").trim(),
+    total: num(r.total),
+    non: num(r.non),
+    rented: num(r.rented),
+    used: num(r.used),
+    balance: num(r.balance),
+    cbm: num(r.cbm)
+  }));
+  selectedOverallAreas = null;
+  updateBuildingFilter();
+  renderDashboard();
+  gtlDismissInitialSplash();
+  $("updated").textContent = "Updated: " + new Date().toLocaleTimeString();
+  gtlScheduleRefresh(result.refreshSeconds);
+};
+
+function loadData() {
+  if (loading) return;
+  clearTimeout(refreshTimer);
+  if (!GTL_DATA_API_URL.startsWith("https://script.google.com/macros/s/") ||
+      !GTL_DATA_API_URL.includes("/exec")) {
+    gtlDismissInitialSplash();
+    showError("Set GTL_DATA_API_URL to your deployed Google Apps Script /exec URL in index.html.");
+    return;
+  }
+  loading = true;
+  $("updated").textContent = "Updating...";
+  $("error").style.display = "none";
+  gtlClearRequest();
+  // JSONP avoids cross-origin fetch restrictions on Apps Script ContentService.
+  const script = document.createElement("script");
+  gtlJsonpScript = script;
+  script.src = GTL_DATA_API_URL + (GTL_DATA_API_URL.includes("?") ? "&" : "?") +
+    "format=jsonp&_=" + Date.now();
+  script.onerror = () => gtlRequestFailed("Could not load data. Check Apps Script deployment access and URL.");
+  gtlRequestTimeout = setTimeout(() => {
+    if (loading) gtlRequestFailed("Data request timed out. Check Apps Script permissions.");
+  }, 20000);
+  document.head.appendChild(script);
+}
+
+/* ========================================
+   RESPONSIVE CHART RESIZE
+======================================== */
+
+let resizeTimer;
+
+window.addEventListener("resize",()=>{
+  clearTimeout(resizeTimer);
+
+  resizeTimer=setTimeout(()=>{
+    if(rows.length) renderDashboard();
+  },250);
+});
+
+/* ========================================
+   INITIALIZE DASHBOARD
+======================================== */
+
+// Prefer the same uploaded GTL logo for the header and the home-screen icon.
+// Keep the embedded original logo as fallback if an icon file is unavailable.
+$("gtlLogo").onerror = function(){ this.onerror = null; this.src = GTL_LOGO; };
+$("gtlLogo").src = "./gtl-icon-192.png";
+
+loadData();
+
+</script>
+
+<style>
+/* Clickable 3D doughnut highlight legend, responsive for desktop and mobile */
+#overallLegend .overall-legend-button {
+  width:100%; display:flex; justify-content:space-between; align-items:center;
+  gap:5px; padding:10px 2px; border:0; border-bottom:1px solid #e1ece8;
+  background:transparent; color:#082b49; font:inherit; font-size:10px;
+  text-align:left; cursor:pointer; border-radius:4px;
+}
+#overallLegend .overall-legend-button.is-muted {opacity:.34;}
+#overallLegend .overall-legend-button.is-selected {font-weight:700;}
+#overallLegend .overall-legend-button:focus-visible,
+#overallLegend .overall-show-all:focus-visible {outline:2px solid #477DA8;outline-offset:2px;}
+#overallLegend .overall-show-all {
+  display:block; width:100%; margin-top:12px; padding:8px 5px;
+  border:1px solid #b8ddd0; border-radius:8px; background:#e8f7f1;
+  color:#176b56; font-weight:700; font-size:10px; cursor:pointer;
+}
+#overallLegend .overall-show-all:hover {background:#d7efe6;}
+.gtl-credit-footer {max-width:1750px;margin:18px auto 0;padding:17px 12px 22px;border-top:1px solid #dce8e4;background:#fff;color:#5b788e;text-align:center;font:400 11px/1.9 Arial,sans-serif;}
+.gtl-credit-footer .footer-title {color:#073b4e;font-weight:700;}
+.gtl-credit-footer .developer-name {font-weight:400 !important;color:#5b788e;}
+@media(max-width:767px){.gtl-credit-footer{font-size:10px;padding:15px 10px 20px;}}
+</style>
+<footer class="gtl-credit-footer">
+  <div class="footer-title">GTL WAREHOUSE AREA UTILIZATION DASHBOARD</div>
+  <div>Designed &amp; Developed by <span class="developer-name">Sandun Jayaweera</span></div>
+  <div>&copy; 2026 Global Transportation &amp; Logistics (Pvt) Ltd.</div>
+</footer>
+
+
+</body>
+</html>
