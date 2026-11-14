@@ -1010,7 +1010,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="controls">
-      <select id="buildingFilter" onchange="mobileChartVibrate(); renderDashboard()">
+      <select id="buildingFilter" onchange="mobileChartVibrate(); gtlRequestAreaAnimation(); renderDashboard()">
         <option value="ALL">All Warehouses</option>
       </select>
 
@@ -1157,7 +1157,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
       <div class="floor-select">
         <select
           id="floorBuilding"
-          onchange="mobileChartVibrate(); renderFloorPanel()">
+          onchange="mobileChartVibrate(); gtlRequestAreaAnimation(); renderFloorPanel(); gtlPlayAreaAnimation(document.getElementById('floorPanel'))">
         </select>
       </div>
 
@@ -2163,6 +2163,51 @@ function renderAvailability(data) {
   `).join("");
 }
 
+/* User-triggered animations only. Live-data refreshes update values silently. */
+let gtlAreaAnimationRequested = false;
+let gtlAreaAnimationFrame = 0;
+function gtlRequestAreaAnimation() { gtlAreaAnimationRequested = true; }
+function gtlPlayAreaAnimation(root) {
+  if (!root || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  cancelAnimationFrame(gtlAreaAnimationFrame);
+  const numbers = [...root.querySelectorAll('.floor-metric strong, .hero-number strong, .floor-heading > span:last-child, .floor-percent')];
+  const counters = [];
+  numbers.forEach(el => {
+    const original = el.innerHTML;
+    // Preserve the estimated CBM sublabel inside the floor heading.
+    const textNode = [...el.childNodes].find(n => n.nodeType === Node.TEXT_NODE && /[0-9]/.test(n.textContent));
+    if (el.classList.contains('floor-percent')) {
+      const match = el.textContent.match(/([\d,.]+)%/);
+      if (match) counters.push({el, value:Number(match[1].replace(/,/g,'')), kind:'percent', original});
+    } else if (textNode) {
+      const match = textNode.textContent.match(/[\d,]+(?:\.\d+)?/);
+      if (match) counters.push({el, node:textNode, value:Number(match[0].replace(/,/g,'')), kind:'node', decimals:match[0].includes('.')?match[0].split('.')[1].length:0, originalText:textNode.textContent});
+    } else {
+      const match = el.textContent.match(/[\d,]+(?:\.\d+)?/);
+      if (match) counters.push({el,value:Number(match[0].replace(/,/g,'')),kind:'plain',decimals:match[0].includes('.')?match[0].split('.')[1].length:0,original});
+    }
+  });
+  const bars = [...root.querySelectorAll('.track .fill')].map(el=>({el,target:parseFloat(el.style.width)||0}));
+  const format=(n,decimals)=>n.toLocaleString('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals});
+  const duration=1500, start=performance.now();
+  function tick(now) {
+    const t=Math.min(1,(now-start)/duration), ease=1-Math.pow(1-t,3);
+    counters.forEach(c=>{
+      const number=format(c.value*ease,c.decimals??(c.kind==='percent'?1:0));
+      if(c.kind==='node') c.node.textContent=c.originalText.replace(/[\d,]+(?:\.\d+)?/,number);
+      else if(c.kind==='percent') c.el.textContent=number+'% Available';
+      else c.el.textContent=number;
+    });
+    bars.forEach(b=>{b.el.style.transition='none';b.el.style.width=(b.target*ease)+'%';});
+    if(t<1) gtlAreaAnimationFrame=requestAnimationFrame(tick);
+    else {
+      counters.forEach(c=>{if(c.kind==='node') c.node.textContent=c.originalText;else c.el.innerHTML=c.original;});
+      bars.forEach(b=>{b.el.style.width=b.target+'%';b.el.style.transition='';});
+    }
+  }
+  gtlAreaAnimationFrame=requestAnimationFrame(tick);
+}
+
 /* ========================================
    MAIN RENDER
 ======================================== */
@@ -2189,6 +2234,10 @@ function renderDashboard() {
   } else {
     renderAvailability(data);
   }
+  if (gtlAreaAnimationRequested) {
+    gtlAreaAnimationRequested = false;
+    gtlPlayAreaAnimation(document.getElementById(activePage === 'availability' ? 'availabilityPage' : 'floorPanel'));
+  }
 }
 
 /* ========================================
@@ -2197,6 +2246,7 @@ function renderDashboard() {
 
 function switchPage(page) {
   if (activePage !== page) mobileChartVibrate();
+  if (page === 'availability' || page === 'overview') gtlRequestAreaAnimation();
   activePage=page;
 
   $("overviewPage").classList.toggle(
