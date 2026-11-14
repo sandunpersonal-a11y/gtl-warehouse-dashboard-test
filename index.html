@@ -1176,6 +1176,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     <div class="panel">
       <h2>WAREHOUSE FLOOR MAPS</h2>
       <p class="subtitle">Click the blue arrow to open the relevant building map</p>
+      <div style="margin:10px 0 14px"><a href="./zone-map.html" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#087af5;color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:12px 16px;border-radius:9px;box-shadow:0 3px 10px #087af533">🗺️ VIEW GREEN BUILDING GROUND FLOOR ZONE MAP ↗</a></div>
       <div class="maps" id="maps"></div>
     </div>
 
@@ -1996,11 +1997,12 @@ function renderMaps() {
       const link=document.createElement("a");
 
       link.className="map-link";
+      if(name==="GREEN BUILDING"){link.style.cssText="width:auto;min-width:110px;padding:8px 10px;font-size:11px;white-space:nowrap";}
       link.href=MAP_LINKS[name];
       link.target="_blank";
       link.rel="noopener noreferrer";
       link.title="Open "+name+" Warehouse Map";
-      link.textContent="➜";
+      link.textContent=name==="GREEN BUILDING"?"VIEW ZONE MAP ↗":"➜";
 
       info.appendChild(link);
     } else {
