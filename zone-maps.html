@@ -118,6 +118,20 @@ button{font-family:Arial,Helvetica,sans-serif;letter-spacing:0;font-weight:700}
 .zone-tooltip .tip-line:last-child{border-bottom:0}
 .zone-tooltip .tip-line strong{font-variant-numeric:tabular-nums;white-space:nowrap}
 .zone:focus-visible .outline{stroke:#073b4e;stroke-width:5}
+
+/* V21: keep a single selected floor at exactly the Both-view map size. */
+@media(min-width:751px){
+ .maps.single,.details.single{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .maps.single .mapcard,.details.single .detailcard{width:100%!important;max-width:none!important;margin:0!important;grid-column:1!important}
+}
+/* Legible compact SVG labels, without forcing wide text into narrow bays. */
+.maptext{font-weight:700!important;letter-spacing:0!important}
+.maptext.number{font-weight:700!important}
+.zone-tooltip{font-size:10px!important;min-width:175px!important;max-width:min(255px,calc(100vw - 18px))!important;padding:7px 9px!important}
+.zone-tooltip .tip-title{font-size:11px!important;margin-bottom:3px!important}
+.zone-tooltip .tip-line{padding:2px 0!important;gap:12px!important}
+.stats{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+
 </style></head><body><main>
 <h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
 <p class="sub">Ground Floor and First Floor · WMS zone-wise area availability</p>
@@ -186,14 +200,14 @@ function renderMap(floor){
   const outline=el('polygon',{points:shape,fill:'transparent',stroke:'#b6bde7','stroke-width':2.6,class:'outline'},group);
   const cx=x+w/2,cy=y+h/2;
   const isNarrow=w<95, isShort=h<77;
-  const fs=isNarrow?9.7:11.5;
+  const fs=isNarrow?7.8:9.1;
   const label=t(group,cx,cy-(isShort?6:9),z.zone,'maptext'+(fixed?' office':''));
   label.setAttribute('font-size',fs);
-  label.setAttribute('textLength',Math.min(w-9,z.zone.length*fs*.57));
+  label.setAttribute('textLength',Math.min(w-9,z.zone.length*fs*.56));
   label.setAttribute('lengthAdjust','spacingAndGlyphs');
   const val=t(group,cx,cy+(isShort?10:11),fmt(z.total),'maptext number'+(fixed?' office':''));
-  val.setAttribute('font-size',isNarrow?11:12);
-  if(w<65){label.setAttribute('font-size',8);val.setAttribute('font-size',9)}
+  val.setAttribute('font-size',isNarrow?8.5:9.5);
+  if(w<65){label.setAttribute('font-size',7);val.setAttribute('font-size',7.5)}
   group.addEventListener('click',e=>{selectZone(floor,z,group,e);});
   group.addEventListener('pointerenter',e=>showZoneTooltip(z,e));
   group.addEventListener('pointermove',e=>moveZoneTooltip(e));
@@ -205,9 +219,14 @@ function renderMap(floor){
 }
 
 const tooltip=document.getElementById('zoneTooltip');
+function zoneMetricItems(z){
+ const rows=[['TOTAL AREA',z.total],['RENTED',z.rented],['UTILIZED',z.utilized],['NON-SELLING',z.nonSelling],['BALANCE / AVAILABLE',z.available]];
+ // Total is always useful; show only non-zero status figures, including a negative
+ // balance when the source WMS snapshot reports an over-allocated zone.
+ return rows.filter(([name,value])=>name==='TOTAL AREA'||Math.abs(Number(value)||0)>0.00001);
+}
 function tooltipHtml(z){
- const items=[['TOTAL AREA',z.total],['RENTED',z.rented],['UTILIZED',z.utilized],['NON-SELLING',z.nonSelling],['BALANCE / AVAILABLE',z.available]];
- return `<div class="tip-title">${z.zone}</div>`+items.map(([name,value])=>`<div class="tip-line"><span>${name}</span><strong>${Number(value).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></div>`).join('');
+ return `<div class="tip-title">${z.zone}</div>`+zoneMetricItems(z).map(([name,value])=>`<div class="tip-line"><span>${name}</span><strong>${Number(value).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></div>`).join('');
 }
 function moveZoneTooltip(e){
  if(tooltip.hidden)return;
@@ -230,7 +249,8 @@ function selectZone(floor,z,group,e){
 
 function renderDetail(floor){
  const z=FLOORS[floor].data.find(z=>z.zone===selected[floor]&&eligible(z));
- document.getElementById(floor+'Detail').innerHTML=z?`<strong>${z.zone}</strong><div class="stats">${[['Total',z.total],['Rented',z.rented],['Utilized',z.utilized],['Available',z.available],['Non-Selling',z.nonSelling],['CBM',z.cbm]].map(([k,v])=>`<span>${k}<strong>${Number(v).toLocaleString('en-US',{maximumFractionDigits:2})}</strong></span>`).join('')}</div>`:'Select a zone on the map.';
+ const items=z?zoneMetricItems(z):[];
+ document.getElementById(floor+'Detail').innerHTML=z?`<strong>${z.zone}</strong><div class="stats">${items.map(([k,v])=>`<span>${k}<strong>${Number(v).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></span>`).join('')}</div>`:'Select a zone on the map.';
 }
 function animate(){
  // Frame timestamps come from requestAnimationFrame itself, never from a different clock.

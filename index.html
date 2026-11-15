@@ -1258,7 +1258,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=20-20261115" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=21-20261115-20261115" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -1585,12 +1585,25 @@ function destroyCharts() {
    KPI VALUES
 ======================================== */
 
+let overviewKpiAnimationFrame=0;
 function renderKPIs(data) {
-  $("kTotal").textContent=fmt(sum(data,"total"));
-  $("kNon").textContent=fmt(sum(data,"non"));
-  $("kRented").textContent=fmt(sum(data,"rented"));
-  $("kUsed").textContent=fmt(sum(data,"used"));
-  $("kBalance").textContent=fmt(sum(data,"balance"));
+  const fields=[["kTotal","total"],["kNon","non"],["kRented","rented"],["kUsed","used"],["kBalance","balance"]];
+  const values=fields.map(([id,key])=>({node:$(id),target:Number(sum(data,key))||0}));
+  cancelAnimationFrame(overviewKpiAnimationFrame);
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    values.forEach(({node,target})=>node.textContent=fmt(target));return;
+  }
+  const duration=400; // Overview KPI counters: 400ms; zone-map counters retain 700ms.
+  let start=null;
+  values.forEach(({node})=>node.textContent='0');
+  function step(timestamp){
+    if(start===null)start=timestamp;
+    const progress=Math.min(1,Math.max(0,(timestamp-start)/duration));
+    const eased=1-Math.pow(1-progress,3);
+    values.forEach(({node,target})=>node.textContent=fmt(Math.round(target*eased)));
+    if(progress<1)overviewKpiAnimationFrame=requestAnimationFrame(step);
+  }
+  overviewKpiAnimationFrame=requestAnimationFrame(step);
 }
 
 
