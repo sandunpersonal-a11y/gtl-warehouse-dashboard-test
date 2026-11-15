@@ -989,6 +989,16 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   .chart{height:255px}
   .donut-layout .chart{height:220px}
 }
+
+/* V6: clear top-level map navigation without changing existing dashboard charts */
+.zone-map-nav{display:flex;justify-content:flex-end;margin:-3px 0 11px}
+#topZoneMapButton{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ background:#eaf6ff;color:#07558d;border:1px solid #b8dff7;border-radius:9px;
+ padding:9px 14px;font-size:12px;font-weight:800;text-decoration:none;
+ box-shadow:0 2px 6px #082b490b;transition:background .2s,border-color .2s}
+#topZoneMapButton:hover,#topZoneMapButton:focus-visible{background:#d5edff;border-color:#087af5}
+@media(max-width:767px){.zone-map-nav{justify-content:stretch;margin:0 0 10px}
+ #topZoneMapButton{width:100%;font-size:11px;padding:11px 9px}}
 </style>
 
 </head>
@@ -1046,6 +1056,8 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     ▤ Area Availability
   </button>
 </div>
+
+<div class="zone-map-nav"><a id="topZoneMapButton" href="./zone-map.html" target="_blank" rel="noopener noreferrer" aria-label="Open Green Building Ground Floor Interactive Zone Map">🗺 VIEW GREEN BUILDING ZONE MAP ↗</a></div>
 
 <section id="overviewPage">
 
@@ -1176,7 +1188,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     <div class="panel">
       <h2>WAREHOUSE FLOOR MAPS</h2>
       <p class="subtitle">Click the blue arrow to open the relevant building map</p>
-      <div style="margin:10px 0 14px"><a href="./zone-map.html" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:#087af5;color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:12px 16px;border-radius:9px;box-shadow:0 3px 10px #087af533">🗺️ VIEW GREEN BUILDING GROUND FLOOR ZONE MAP ↗</a></div>
+      
       <div class="maps" id="maps"></div>
     </div>
 
