@@ -1258,7 +1258,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=22-20261115" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=23-20261115" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -2031,7 +2031,7 @@ function renderMaps() {
     title.textContent=name;
     info.appendChild(title);
 
-    if(MAP_LINKS[name]) {
+    if(MAP_LINKS[name] && name !== "GREEN BUILDING") {
       const link=document.createElement("a");
 
       link.className="map-link";
@@ -2049,7 +2049,7 @@ function renderMaps() {
       pending.className="pending";
       pending.textContent="PENDING";
 
-      info.appendChild(pending);
+      if(name !== "GREEN BUILDING") info.appendChild(pending);
     }
 
     card.appendChild(image);
