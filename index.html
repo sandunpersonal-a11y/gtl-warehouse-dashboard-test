@@ -1259,7 +1259,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     <h2>GREEN BUILDING — INTERACTIVE ZONE MAP</h2>
     <p>Interactive warehouse zone map · Area status and storage type filters</p>
   </div>
-<div class="floor-switch" role="group" aria-label="Select Green Building floor"><button type="button" class="floor-btn active" data-floor="ground" onclick="selectZoneFloor('ground')">GROUND FLOOR</button><button type="button" class="floor-btn" data-floor="first" onclick="selectZoneFloor('first')">FIRST FLOOR · MEZZANINE</button></div>
+<div class="floor-switch" role="group" aria-label="Select Green Building floor"><button type="button" class="floor-btn active" data-floor="ground" aria-pressed="true" onclick="selectZoneFloor('ground')">GROUND FLOOR</button><button type="button" class="floor-btn" data-floor="first" aria-pressed="false" onclick="selectZoneFloor('first')">FIRST FLOOR</button></div>
   <iframe id="embeddedZoneMap" title="Green Building Ground Floor Interactive Zone Map" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </section>
 
@@ -2239,6 +2239,25 @@ function renderDashboard() {
    PAGE SWITCH
 ======================================== */
 
+
+/* V9 fix: Switch the embedded floor maps without opening a new browser tab. */
+let selectedZoneFloor = 'ground';
+function selectZoneFloor(floor) {
+  if (floor !== 'ground' && floor !== 'first') return;
+  selectedZoneFloor = floor;
+  const frame = document.getElementById('embeddedZoneMap');
+  if (!frame) return;
+  const filename = floor === 'first' ? 'zone-map-mezzanine.html' : 'zone-map.html';
+  const nextUrl = './' + filename + '?v=9';
+  if (frame.getAttribute('src') !== nextUrl) frame.setAttribute('src', nextUrl);
+  frame.title = 'Green Building ' + (floor === 'first' ? 'First Floor' : 'Ground Floor') + ' Interactive Zone Map';
+  document.querySelectorAll('.floor-btn').forEach(btn => {
+    const selected = btn.dataset.floor === floor;
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-pressed', String(selected));
+  });
+}
+
 function switchPage(page) {
   if (activePage !== page) mobileChartVibrate();
   activePage=page;
@@ -2252,7 +2271,7 @@ function switchPage(page) {
   );
   $("zoneMapPage").classList.toggle("hidden",page!=="zoneMap");
   if(page==="zoneMap" && !$("embeddedZoneMap").getAttribute("src")){
-    $("embeddedZoneMap").setAttribute("src","./zone-map.html?v=8-ground");
+    selectZoneFloor(selectedZoneFloor);
   }
 
   $("overviewTab").classList.toggle(
