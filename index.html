@@ -2031,7 +2031,9 @@ function renderMaps() {
     title.textContent=name;
     info.appendChild(title);
 
-    if(MAP_LINKS[name]) {
+    
+if(MAP_LINKS[name] && name !== "GREEN BUILDING") {
+
       const link=document.createElement("a");
 
       link.className="map-link";
@@ -2049,7 +2051,7 @@ function renderMaps() {
       pending.className="pending";
       pending.textContent="PENDING";
 
-      info.appendChild(pending);
+      if (name !== "GREEN BUILDING") info.appendChild(pending);
     }
 
     card.appendChild(image);
