@@ -41,12 +41,36 @@ h1{font-size:17px;color:var(--navy);margin:0 0 4px}p.sub{font-size:11px;color:#6
 @keyframes snowfall{from{transform:translateY(-12px);opacity:0}15%{opacity:.8}85%{opacity:.7}to{transform:translateY(var(--fall));opacity:0}}
 @media(max-width:750px){main{padding:7px}.maps,.details{grid-template-columns:1fr}.kpis{gap:4px}.kpi{padding:6px 5px}.kpi small{font-size:7px}.kpi strong{font-size:clamp(11px,3vw,17px)}.mapcard{padding:5px}.mapcard h2{font-size:12px}.toolbar{gap:5px}.toolbar button{padding:8px 9px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* V15 desktop: one compact row; mobile retains the existing stacked controls. */
+@media(min-width:1100px){
+ .filter-strip{display:flex;align-items:center;gap:9px;flex-wrap:nowrap;margin:0 0 8px}
+ .filter-strip .toolbar{display:flex!important;flex:0 0 auto;gap:3px;flex-wrap:nowrap;margin:0;min-width:0}
+ .filter-strip .toolbar label{min-width:0;white-space:nowrap;font-size:9px;margin-right:2px}
+ .filter-strip .toolbar button{padding:5px 7px;font-size:9px;white-space:nowrap;min-height:27px}
+}
+/* Follow the device theme; retain the high-contrast WMS map palette. */
+:root{color-scheme:light dark}
+@media(prefers-color-scheme:dark){
+ body{background:#101c27;color:#e9f2f8}
+ h1,.mapcard h2,.detailcard h3{color:#e9f4fa}
+ p.sub,.notice{color:#afc3d0}
+ .mapcard,.detailcard,.kpi{background:#1b2d3b;border-color:#38546a}
+ .toolbar label{color:#bed2df}
+ .toolbar button{background:#20384a;color:#eaf5fb;border-color:#4d687b}
+ .toolbar button.active{background:#154b74;color:#fff;border-color:#55b1ff;box-shadow:inset 0 0 0 1px #55b1ff}
+ .kpi small{color:#b9cbd7}.kpi strong{color:#f7fbff}
+ .kpi.active{background:#29485a}
+ .stats span{background:#284252}.stats strong{color:#f5faff}
+ #noMap{background:#1b2d3b;color:#e8f3fa;border-color:#567080}
+ /* SVG labels and yellow/blue/green zone fills stay consistent in both themes. */
+}
 </style></head><body><main>
 <h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
 <p class="sub">Ground Floor and First Floor · WMS zone-wise area availability</p>
-<div class="toolbar" id="floorControls" aria-label="Floor filters"></div>
+<div class="filter-strip"><div class="toolbar" id="floorControls" aria-label="Floor filters"></div>
 <div class="toolbar" id="typeControls" aria-label="Storage type filters"></div>
-<div class="toolbar" id="statusControls" aria-label="Area status filters"></div>
+<div class="toolbar" id="statusControls" aria-label="Area status filters"></div></div>
 <div class="kpis" id="kpis"></div>
 <div class="maps" id="maps">
 <section class="mapcard" data-floor="ground"><h2>GROUND FLOOR</h2><svg class="mapframe" id="groundMap" viewBox="0 0 900 705" role="img" aria-label="Ground Floor zone map"></svg></section>
@@ -91,10 +115,16 @@ function renderMap(floor){
   const fixed=z.zone==='GB OFFICE'||z.zone==='GBGF-01'||z.zone==='GBG1';
   const matching=eligible(z);group.style.opacity=matching?'1':'0.09';group.style.pointerEvents=matching?'auto':'none';
   el('polygon',{points:shape,fill:fixed?'#912ad6':'#fff8b5'},group);
-  if(status!=='all'&&!fixed&&matching){const p=portion(z)[status];if(p.amount>0){const height=h*p.amount/Math.max(1,z.total);
-   const r=el('rect',{x,y:y+h*p.off/Math.max(1,z.total),width:w,height:0,fill:COLORS[status],'clip-path':`url(#${clipId})`},group);
-   r.dataset.finalHeight=height;
-  }}
+  if(!fixed&&matching){
+   // All Areas draws the four non-overlapping status bands; a selected status draws only its own band.
+   const parts=portion(z);
+   for(const key of (status==='all'?['nonSelling','rented','utilized','available']:[status])){
+     const p=parts[key];if(!p||p.amount<=0)continue;
+     const height=h*p.amount/Math.max(1,z.total);
+     const r=el('rect',{x,y:y+h*p.off/Math.max(1,z.total),width:w,height:0,fill:COLORS[key],'clip-path':`url(#${clipId})`},group);
+     r.dataset.finalHeight=height;
+   }
+  }
   if(matching&&typeFilter==='cool'&&z.storeType==='Temperature Control'){
    const snow=el('g',{'clip-path':`url(#${clipId})`,class:'snow'},group);
    for(let j=0;j<7;j++){const flake=el('circle',{cx:x+8+(j*17)%(Math.max(20,w-12)),cy:y+10+(j*23)%(Math.max(20,h-20)),r:j%3===0?2.1:1.5,fill:'#fff',opacity:'.76'},snow);flake.style.animation=`snowfall ${3+j%3}s linear ${-(j*.6)}s infinite`;flake.style.setProperty('--fall',Math.max(30,h-12)+'px')}
