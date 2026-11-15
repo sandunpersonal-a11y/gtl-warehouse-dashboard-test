@@ -132,9 +132,24 @@ button{font-family:Arial,Helvetica,sans-serif;letter-spacing:0;font-weight:700}
 .zone-tooltip .tip-line{padding:2px 0!important;gap:12px!important}
 .stats{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
 
+
+/* V22: compact professional heading and KPI cards; preserve map/filter behavior */
+h1{font-size:14px;line-height:1.35;font-weight:800;letter-spacing:.01em;margin:0 0 10px}
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr));max-width:1020px;gap:8px;margin:8px 0 12px}
+.kpi{padding:6px 9px;min-height:54px;border-radius:8px;border-top-width:3px}
+.kpi small{font-size:9px;line-height:1.25}
+.kpi strong{font-size:clamp(14px,1.25vw,18px);line-height:1.25;margin-top:3px}
+@media(max-width:750px){
+ h1{font-size:12px;margin:0 0 9px}
+ .kpis{grid-template-columns:repeat(2,minmax(0,1fr));max-width:100%;gap:7px}
+ .kpi{min-height:52px;padding:7px 9px}
+ .kpi small{font-size:9px}
+ .kpi strong{font-size:16px}
+ .kpi:last-child:nth-child(odd){grid-column:1/-1;max-width:calc(50% - 3.5px);width:100%}
+}
 </style></head><body><main>
 <h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
-<p class="sub">Ground Floor and First Floor · WMS zone-wise area availability</p>
+
 <div class="filter-strip"><div class="toolbar" id="floorControls" aria-label="Floor filters"></div>
 <div class="toolbar" id="typeControls" aria-label="Storage type filters"></div>
 <div class="toolbar" id="statusControls" aria-label="Area status filters"></div></div>
