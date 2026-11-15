@@ -147,6 +147,13 @@ h1{font-size:14px;line-height:1.35;font-weight:800;letter-spacing:.01em;margin:0
  .kpi strong{font-size:16px}
  .kpi:last-child:nth-child(odd){grid-column:1/-1;max-width:calc(50% - 3.5px);width:100%}
 }
+
+/* V24: mobile status buttons occupy consecutive slots without gaps. */
+@media(max-width:750px){
+ #statusControls{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:row!important}
+ #statusControls button[data-status]{grid-column:auto!important;grid-row:auto!important;min-width:0!important}
+ #statusControls label{grid-column:1/-1!important;grid-row:auto!important}
+}
 </style></head><body><main>
 <h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
 
