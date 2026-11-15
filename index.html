@@ -6,10 +6,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GTL Warehouse Area Utilization Dashboard</title>
-<link rel="icon" type="image/png" sizes="192x192" href="./gtl-icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="./gtl-icon-512.png">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" sizes="180x180" href="./gtl-icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./gtl-icon-192.png?v=26">
+<link rel="icon" type="image/png" sizes="512x512" href="./gtl-icon-512.png?v=26">
+<link rel="manifest" href="./manifest.json?v=26">
+<link rel="apple-touch-icon" sizes="180x180" href="./gtl-icon-180.png?v=26">
 <meta name="apple-mobile-web-app-title" content="GTL Global Park">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1024,7 +1024,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     <img
       class="logo"
       id="gtlLogo"
-      src="./gtl-icon-1024.png"
+      src="./gtl-icon-1024.png?v=26"
       alt="GTL Logo"
     >
 
@@ -2481,7 +2481,7 @@ window.addEventListener("resize",()=>{
 // Prefer the same uploaded GTL logo for the header and the home-screen icon.
 // Keep the embedded original logo as fallback if an icon file is unavailable.
 $("gtlLogo").onerror = function(){ this.onerror = null; this.src = GTL_LOGO; };
-$("gtlLogo").src = "./gtl-icon-1024.png";
+$("gtlLogo").src = "./gtl-icon-1024.png?v=26";
 
 loadData();
 
