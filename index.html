@@ -1004,8 +1004,8 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 .zone-map-section-heading{margin:0 0 10px}
 .zone-map-section-heading h2{font-size:15px;font-weight:800;margin:0 0 4px}
 .zone-map-section-heading p{font-size:12px;opacity:.7;margin:0}
-#embeddedZoneMap{display:block;width:100%;height:calc(100vh - 225px);min-height:620px;border:1px solid #d9e6ec;border-radius:12px;background:#fff}
-@media(max-width:767px){.tabs{flex-wrap:wrap}.tabs .tab{flex:1 1 auto}#embeddedZoneMap{height:calc(100dvh - 170px);min-height:650px;border-radius:9px}}
+#embeddedZoneMap{display:block;width:100%;height:840px;min-height:650px;border:0;border-radius:10px;background:#f5f9fc}
+@media(max-width:767px){.tabs{flex-wrap:wrap}.tabs .tab{flex:1 1 auto}#embeddedZoneMap{height:1450px;min-height:900px;border-radius:9px}}
 .floor-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}.floor-btn{border:1px solid #bfd4e0;background:#fff;color:#24495e;border-radius:8px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer}.floor-btn.active{background:#087af5;color:#fff;border-color:#087af5}.floor-btn:hover{border-color:#087af5}@media(max-width:600px){.floor-btn{flex:1;font-size:10px;padding:11px 8px}}</style>
 
 </head>
@@ -1255,12 +1255,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <div class="zone-map-section-heading">
-    <h2>GREEN BUILDING — INTERACTIVE ZONE MAP</h2>
-    <p>Interactive warehouse zone map · Area status and storage type filters</p>
-  </div>
-<div class="floor-switch" role="group" aria-label="Select Green Building floor"><button type="button" class="floor-btn active" data-floor="ground" aria-pressed="true" onclick="selectZoneFloor('ground')">GROUND FLOOR</button><button type="button" class="floor-btn" data-floor="first" aria-pressed="false" onclick="selectZoneFloor('first')">FIRST FLOOR</button></div>
-  <iframe id="embeddedZoneMap" title="Green Building Ground Floor Interactive Zone Map" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=11" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -2240,24 +2235,24 @@ function renderDashboard() {
 ======================================== */
 
 
-/* V9 fix: Switch the embedded floor maps without opening a new browser tab. */
-let selectedZoneFloor = 'ground';
-function selectZoneFloor(floor) {
-  if (floor !== 'ground' && floor !== 'first') return;
-  selectedZoneFloor = floor;
-  const frame = document.getElementById('embeddedZoneMap');
-  if (!frame) return;
-  const filename = floor === 'first' ? 'zone-map-mezzanine.html' : 'zone-map.html';
-  const nextUrl = './' + filename + '?v=9';
-  if (frame.getAttribute('src') !== nextUrl) frame.setAttribute('src', nextUrl);
-  frame.title = 'Green Building ' + (floor === 'first' ? 'First Floor' : 'Ground Floor') + ' Interactive Zone Map';
-  document.querySelectorAll('.floor-btn').forEach(btn => {
-    const selected = btn.dataset.floor === floor;
-    btn.classList.toggle('active', selected);
-    btn.setAttribute('aria-pressed', String(selected));
-  });
+/* V11: Unified side-by-side zone maps. */
+function updateZoneMapBuilding(){
+ const frame=document.getElementById('embeddedZoneMap');
+ const select=document.getElementById('buildingFilter');
+ if(frame&&frame.contentWindow&&select)frame.contentWindow.postMessage({type:'gtl-building-filter',building:select.value},location.origin);
 }
-
+function selectZoneFloor(){switchPage('zoneMap');}
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||!event.data||event.data.type!=='gtl-zone-height')return;
+ const frame=document.getElementById('embeddedZoneMap');
+ if(frame&&event.source===frame.contentWindow)frame.style.height=Math.max(560,Math.min(2600,Number(event.data.height)+8))+'px';
+});
+document.addEventListener('DOMContentLoaded',()=>{
+ const frame=document.getElementById('embeddedZoneMap');
+ if(frame)frame.addEventListener('load',()=>updateZoneMapBuilding());
+ const select=document.getElementById('buildingFilter');
+ if(select)select.addEventListener('change',()=>updateZoneMapBuilding());
+});
 function switchPage(page) {
   if (activePage !== page) mobileChartVibrate();
   activePage=page;
@@ -2270,9 +2265,7 @@ function switchPage(page) {
     "hidden",page!=="availability"
   );
   $("zoneMapPage").classList.toggle("hidden",page!=="zoneMap");
-  if(page==="zoneMap" && !$("embeddedZoneMap").getAttribute("src")){
-    selectZoneFloor(selectedZoneFloor);
-  }
+  if(page==="zoneMap"){updateZoneMapBuilding();const f=$("embeddedZoneMap");if(f&&f.contentWindow)f.contentWindow.postMessage({type:"gtl-replay"},location.origin);}
 
   $("overviewTab").classList.toggle(
     "active",page==="overview"
