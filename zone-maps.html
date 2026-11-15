@@ -81,6 +81,43 @@ h1{font-size:17px;color:var(--navy);margin:0 0 4px}p.sub{font-size:11px;color:#6
  #statusControls button[data-status="nonSelling"]{grid-column:3;grid-row:3}
  .mapcard h2{font-size:13px;line-height:1.35}
 }
+
+/* V20: sharp type and consistent light interface */
+html,body{color-scheme:light!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button{font-family:Arial,Helvetica,sans-serif;letter-spacing:0;font-weight:700}
+.maptext{font-family:Arial,Helvetica,sans-serif;font-weight:800;text-rendering:geometricPrecision;paint-order:normal}
+.mapframe{shape-rendering:geometricPrecision}
+/* Floor and storage on first row; area status is its own clear row */
+.filter-strip{display:grid!important;grid-template-columns:max-content max-content;gap:8px;justify-content:start;align-items:stretch;overflow:visible!important}
+.filter-strip #statusControls{grid-column:1/-1;justify-self:start;margin:0!important}
+.filter-strip .toolbar{min-width:0;box-shadow:0 2px 7px rgba(16,53,79,.05)}
+.toolbar button[data-status="rented"]{border-color:#00a76b;background:#e7f9ee;color:#07653e}
+.toolbar button[data-status="available"]{border-color:#e6b329;background:#fff6ce;color:#795500}
+.toolbar button[data-status="nonSelling"]{border-color:#800020;background:#fff0f3;color:#800020}
+.toolbar button[data-status].active{box-shadow:inset 0 0 0 1px currentColor}
+/* Desktop selected floor takes the whole map width; other floor is absent */
+@media(min-width:751px){
+ .maps.single,.details.single{grid-template-columns:minmax(0,1fr)!important}
+ .maps.single .mapcard{width:100%;max-width:1120px;margin:0 auto}
+ .details.single .detailcard{width:100%;max-width:1120px;margin:0 auto}
+}
+@media(max-width:750px){
+ .filter-strip{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px}
+ #floorControls,#typeControls{grid-column:auto;display:flex;align-content:start;align-items:center}
+ #floorControls label,#typeControls label{width:100%;min-width:0;margin-bottom:2px}
+ #floorControls button,#typeControls button{padding:7px 5px;flex:1 1 auto}
+ #statusControls{grid-column:1/-1;width:100%;justify-self:stretch}
+ #statusControls button[data-status="available"]{grid-column:1/span 2;grid-row:3}
+ #statusControls button[data-status="nonSelling"]{grid-column:3;grid-row:3}
+}
+/* Tooltip is anchored within the viewport and does not alter the map */
+.zone-tooltip{position:fixed;z-index:1000;max-width:min(330px,calc(100vw - 20px));min-width:235px;pointer-events:none;background:#fff;color:#163b52;border:1px solid #b7cddd;border-radius:11px;box-shadow:0 12px 30px #163b5238;padding:11px 12px;font:12px Arial,Helvetica,sans-serif;line-height:1.45}
+.zone-tooltip[hidden]{display:none!important}
+.zone-tooltip .tip-title{font-weight:900;font-size:14px;color:#073b4e;margin-bottom:5px}
+.zone-tooltip .tip-line{display:flex;justify-content:space-between;gap:20px;padding:3px 0;border-bottom:1px solid #edf2f6}
+.zone-tooltip .tip-line:last-child{border-bottom:0}
+.zone-tooltip .tip-line strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+.zone:focus-visible .outline{stroke:#073b4e;stroke-width:5}
 </style></head><body><main>
 <h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
 <p class="sub">Ground Floor and First Floor · WMS zone-wise area availability</p>
@@ -88,6 +125,7 @@ h1{font-size:17px;color:var(--navy);margin:0 0 4px}p.sub{font-size:11px;color:#6
 <div class="toolbar" id="typeControls" aria-label="Storage type filters"></div>
 <div class="toolbar" id="statusControls" aria-label="Area status filters"></div></div>
 <div class="kpis" id="kpis"></div>
+<div id="zoneTooltip" class="zone-tooltip" role="status" aria-live="polite" hidden></div>
 <div class="maps" id="maps">
 <section class="mapcard" data-floor="ground"><h2>GREEN BUILDING GROUND FLOOR</h2><svg class="mapframe" id="groundMap" viewBox="0 0 900 705" role="img" aria-label="Ground Floor zone map"></svg></section>
 <section class="mapcard" data-floor="first"><h2>GREEN BUILDING FIRST FLOOR</h2><svg class="mapframe" id="firstMap" viewBox="0 0 900 705" role="img" aria-label="First Floor zone map"></svg></section>
@@ -156,10 +194,40 @@ function renderMap(floor){
   const val=t(group,cx,cy+(isShort?10:11),fmt(z.total),'maptext number'+(fixed?' office':''));
   val.setAttribute('font-size',isNarrow?11:12);
   if(w<65){label.setAttribute('font-size',8);val.setAttribute('font-size',9)}
-  group.addEventListener('click',()=>{selected[floor]=z.zone;renderMap(floor);renderDetail(floor)});
+  group.addEventListener('click',e=>{selectZone(floor,z,group,e);});
+  group.addEventListener('pointerenter',e=>showZoneTooltip(z,e));
+  group.addEventListener('pointermove',e=>moveZoneTooltip(e));
+  group.addEventListener('pointerleave',()=>{if(selected[floor]!==z.zone)hideZoneTooltip()});
+  group.addEventListener('focus',()=>showZoneTooltip(z,group.getBoundingClientRect()));
+  group.addEventListener('blur',()=>{if(selected[floor]!==z.zone)hideZoneTooltip()});
   group.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();group.dispatchEvent(new MouseEvent('click'))}});
  }
 }
+
+const tooltip=document.getElementById('zoneTooltip');
+function tooltipHtml(z){
+ const items=[['TOTAL AREA',z.total],['RENTED',z.rented],['UTILIZED',z.utilized],['NON-SELLING',z.nonSelling],['BALANCE / AVAILABLE',z.available]];
+ return `<div class="tip-title">${z.zone}</div>`+items.map(([name,value])=>`<div class="tip-line"><span>${name}</span><strong>${Number(value).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></div>`).join('');
+}
+function moveZoneTooltip(e){
+ if(tooltip.hidden)return;
+ const r=tooltip.getBoundingClientRect();
+ let x,y;
+ if(e && typeof e.clientX==='number'){x=e.clientX+15;y=e.clientY+15;}
+ else if(e && typeof e.left==='number'){x=e.right+10;y=e.top+10;}
+ else{x=12;y=12;}
+ tooltip.style.left=Math.max(8,Math.min(x,window.innerWidth-r.width-8))+'px';
+ tooltip.style.top=Math.max(8,Math.min(y,window.innerHeight-r.height-8))+'px';
+}
+function showZoneTooltip(z,e){tooltip.innerHTML=tooltipHtml(z);tooltip.hidden=false;moveZoneTooltip(e)}
+function hideZoneTooltip(){tooltip.hidden=true}
+function selectZone(floor,z,group,e){
+ document.getElementById(floor+'Map').querySelectorAll('.zone.selected').forEach(node=>node.classList.remove('selected'));
+ group.classList.add('selected');selected[floor]=z.zone;
+ renderDetail(floor);showZoneTooltip(z,e);
+ requestAnimationFrame(reportHeight);
+}
+
 function renderDetail(floor){
  const z=FLOORS[floor].data.find(z=>z.zone===selected[floor]&&eligible(z));
  document.getElementById(floor+'Detail').innerHTML=z?`<strong>${z.zone}</strong><div class="stats">${[['Total',z.total],['Rented',z.rented],['Utilized',z.utilized],['Available',z.available],['Non-Selling',z.nonSelling],['CBM',z.cbm]].map(([k,v])=>`<span>${k}<strong>${Number(v).toLocaleString('en-US',{maximumFractionDigits:2})}</strong></span>`).join('')}</div>`:'Select a zone on the map.';
@@ -206,10 +274,11 @@ function render(){
  document.getElementById('kpis').style.display=visible?'grid':'none';
  if(!visible){reportHeight();return;}
  const activeFloors=floorList();
- document.querySelectorAll('.mapcard').forEach(card=>{card.style.display='';card.classList.toggle('ghost',!activeFloors.includes(card.dataset.floor));card.setAttribute('aria-hidden',String(!activeFloors.includes(card.dataset.floor)))});
- document.querySelectorAll('.detailcard').forEach(card=>{card.style.display='';card.classList.toggle('ghost',!activeFloors.includes(card.dataset.floor))});
- document.getElementById('maps').classList.remove('single');
- document.getElementById('details').classList.remove('single');
+ document.querySelectorAll('.mapcard').forEach(card=>{const on=activeFloors.includes(card.dataset.floor);card.style.display=on?'':'none';card.classList.remove('ghost');card.setAttribute('aria-hidden',String(!on))});
+ document.querySelectorAll('.detailcard').forEach(card=>{const on=activeFloors.includes(card.dataset.floor);card.style.display=on?'':'none';card.classList.remove('ghost')});
+ document.getElementById('maps').classList.toggle('single',activeFloors.length===1);
+ document.getElementById('details').classList.toggle('single',activeFloors.length===1);
+ hideZoneTooltip();
  document.getElementById('floorControls').innerHTML='<label>FLOOR</label>'+[['all','🏢 Both'],['ground','🏬 Ground'],['first','🏢 First']].map(([k,l])=>`<button data-floor="${k}" class="${floorFilter===k?'active':''}">${l}</button>`).join('');
  document.getElementById('typeControls').innerHTML='<label>STORAGE TYPE</label>'+[['all','📦 All Types'],['ambient','🌤 Ambient'],['cool','❄ Cool Room']].filter(([k])=>k==='all'||(k==='ambient'?floorList().some(f=>FLOORS[f].data.some(z=>z.storeType==='Ambient')):floorList().some(f=>FLOORS[f].data.some(z=>z.storeType==='Temperature Control')))).map(([k,l])=>`<button data-type="${k}" class="${typeFilter===k?'active':''}">${l}</button>`).join('');
  const sums=totals();
