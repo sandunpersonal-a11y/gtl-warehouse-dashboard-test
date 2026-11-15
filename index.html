@@ -999,6 +999,13 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 #topZoneMapButton:hover,#topZoneMapButton:focus-visible{background:#d5edff;border-color:#087af5}
 @media(max-width:767px){.zone-map-nav{justify-content:stretch;margin:0 0 10px}
  #topZoneMapButton{width:100%;font-size:11px;padding:11px 9px}}
+/* Embedded Zone Map: third dashboard view, no new browser tab */
+#zoneMapPage{min-width:0}
+.zone-map-section-heading{margin:0 0 10px}
+.zone-map-section-heading h2{font-size:15px;font-weight:800;margin:0 0 4px}
+.zone-map-section-heading p{font-size:12px;opacity:.7;margin:0}
+#embeddedZoneMap{display:block;width:100%;height:calc(100vh - 225px);min-height:620px;border:1px solid #d9e6ec;border-radius:12px;background:#fff}
+@media(max-width:767px){.tabs{flex-wrap:wrap}.tabs .tab{flex:1 1 auto}#embeddedZoneMap{height:calc(100dvh - 170px);min-height:650px;border-radius:9px}}
 </style>
 
 </head>
@@ -1055,9 +1062,8 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     onclick="switchPage('availability')">
     ▤ Area Availability
   </button>
+  <button class="tab" id="zoneMapTab" onclick="switchPage('zoneMap')">🗺 Zone Map</button>
 </div>
-
-<div class="zone-map-nav"><a id="topZoneMapButton" href="./zone-map.html" target="_blank" rel="noopener noreferrer" aria-label="Open Green Building Ground Floor Interactive Zone Map">🗺 VIEW GREEN BUILDING ZONE MAP ↗</a></div>
 
 <section id="overviewPage">
 
@@ -1246,6 +1252,14 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     Estimated Available CBM = Available SQ. FT. × 1.7 ÷ 25.
   </p>
 
+</section>
+
+<section id="zoneMapPage" class="hidden">
+  <div class="zone-map-section-heading">
+    <h2>GREEN BUILDING — GROUND FLOOR ZONE MAP</h2>
+    <p>Interactive warehouse zone map · Area status and storage type filters</p>
+  </div>
+  <iframe id="embeddedZoneMap" title="Green Building Ground Floor Interactive Zone Map" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 </section>
 
 </main>
@@ -2235,6 +2249,10 @@ function switchPage(page) {
   $("availabilityPage").classList.toggle(
     "hidden",page!=="availability"
   );
+  $("zoneMapPage").classList.toggle("hidden",page!=="zoneMap");
+  if(page==="zoneMap" && !$("embeddedZoneMap").getAttribute("src")){
+    $("embeddedZoneMap").setAttribute("src","./zone-map.html?v=7-embedded");
+  }
 
   $("overviewTab").classList.toggle(
     "active",page==="overview"
@@ -2243,8 +2261,9 @@ function switchPage(page) {
   $("availabilityTab").classList.toggle(
     "active",page==="availability"
   );
+  $("zoneMapTab").classList.toggle("active",page==="zoneMap");
 
-  renderDashboard();
+  if(page!=="zoneMap")renderDashboard();
 }
 
 /* ========================================
