@@ -37,3 +37,5 @@ Floor maps are static uploaded PNGs, with an interactive zone data list alongsid
 Precise clickable polygon overlays directly on the image require coordinate mapping for
 each zone; this version does not guess zone coordinates.
 For B1, add real zone rows when available; no fictional zone SQFT values are assigned.
+
+FIX V2: Floor map gallery now shows all selected floors/buildings and opens 4K maps in a new tab.

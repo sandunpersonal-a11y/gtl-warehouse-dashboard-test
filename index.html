@@ -1269,7 +1269,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=zonewise1" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=zonewise1" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -2499,8 +2499,8 @@ $("gtlLogo").src = "./gtl-icon-1024.png?v=26";
    IT API integration: normalize incoming data into the same row keys here. */
 const GTL_ZONE_CONFIG={source:"snapshot", apiUrl:"", refreshSeconds:120};
 let gtlZoneRecords=[];
-function gtlFloorChanged(){gtlUpdateFloors();renderDashboard();gtlSyncMap();}
-function gtlStatusChanged(){renderDashboard();gtlSyncMap();}
+function gtlFloorChanged(){renderDashboard();gtlSyncMap();}
+function gtlStatusChanged(){gtlSyncMap();}
 function gtlUpdateFloors(){
  const el=document.getElementById("masterFloor"),prev=el.value;
  const b=document.getElementById("buildingFilter").value;
@@ -2553,6 +2553,7 @@ function gtlReceiveZoneRows(data,live=false){
  renderDashboard();
  const e=document.getElementById("updated");
  e.textContent=(live?"Live data":"Excel snapshot")+" • "+new Date().toLocaleTimeString();
+ gtlDismissInitialSplash();
  const frame=document.getElementById("embeddedZoneMap");
  if(frame?.contentWindow)frame.contentWindow.postMessage({type:"gtl-zone-data",rows:gtlZoneRecords},location.origin);
 }
