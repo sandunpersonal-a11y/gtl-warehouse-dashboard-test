@@ -53,7 +53,7 @@ $("mapTitle").textContent=b==="ALL"?"All Warehouse Floor Maps":b+" Floor Maps";
 const gallery=[];
 for(const building of selectedBuildings){for(const level of (f==="ALL"?["ground","first"]:[f])){
  const src=MAPS[building]?.[level];if(!src)continue;
- gallery.push(`<figure><figcaption>${esc(building)} — ${level==="ground"?"Ground Floor":"First / Mezzanine Floor"}</figcaption><a href="${encodeURI(src)}" target="_blank" rel="noopener" title="Open full-resolution floor map"><img class="map" src="${encodeURI(src)}" alt="${esc(building)} ${level} floor map" loading="lazy"></a></figure>`)
+ gallery.push(`<figure><figcaption>${esc(building)} — ${level==="ground"?"Ground Floor":"First / Mezzanine Floor"}</figcaption><a href="${src}" target="_blank" rel="noopener" title="Open full-resolution floor map"><img class="map" src="${src}" alt="${esc(building)} ${level} floor map" loading="lazy"></a></figure>`)
 }}
 $("mapGallery").innerHTML=gallery.join("")||"<p>No floor map uploaded for this selection.</p>";
 $("totals").innerHTML=[["Total","total"],["Rented","rented"],["Utilized","used"],["Available","balance"],["Non-Selling","non"]].map(([t,k])=>`<span class="badge">${t}: ${fmt(all.reduce((s,r)=>s+n(r,k),0))} SQFT</span>`).join("");
