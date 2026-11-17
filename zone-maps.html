@@ -1,339 +1,75 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="theme-color" content="#f5f9fc">
-<title>GTL Green Building | Interactive Floor Zone Maps</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GTL | Zone-wise Interactive Warehouse Maps</title>
 <style>
-:root{--navy:#073b4e;--blue:#087af5;--green:#00a76b;--gold:#ffc529;--pink:#ad3161;--ink:#163b52;--line:#d9e6ed}
-*{box-sizing:border-box}body{font-family:Inter,Arial,sans-serif;margin:0;background:#f5f9fc;color:var(--ink)}
-main{max-width:1550px;margin:auto;padding:10px}
-h1{font-size:17px;color:var(--navy);margin:0 0 4px}p.sub{font-size:11px;color:#668193;margin:0 0 11px}
-.toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
-.toolbar label{font-size:10px;font-weight:800;color:#456376;min-width:91px}
-.toolbar button{background:#fff;border:1px solid #c7dce7;border-radius:7px;padding:5px 9px;font-weight:750;color:#37536b;cursor:pointer;font-size:10px;line-height:1.3;min-height:29px}
-.toolbar button.active{background:#e8f4ff;border-color:#087af5;color:#0764b3;box-shadow:inset 0 0 0 1px #087af5}
-.toolbar button:disabled{opacity:.4;cursor:not-allowed}
-.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:8px 0 12px}
-.kpi{border:1px solid var(--line);border-top:3px solid var(--tone);border-radius:9px;background:#fff;padding:8px 10px;text-align:left;cursor:pointer;min-width:0}
-.kpi.active{background:color-mix(in srgb,var(--tone) 10%,white);border-color:var(--tone)}
-.kpi small{font-size:9px;display:block;font-weight:800;color:#627d8c}.kpi strong{display:block;font-size:clamp(15px,1.5vw,21px);color:#102f42;font-variant-numeric:tabular-nums;margin-top:2px}
-.maps.single,.details.single{grid-template-columns:minmax(0,1fr)}
-.maps.single .mapcard{max-width:950px;width:100%;margin:auto}
-.maps{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
-.mapcard{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px;min-width:0}
-.mapcard h2{font-size:13px;color:#073b4e;margin:0 0 5px;text-align:center}
-.mapframe{width:100%;display:block;aspect-ratio:900 / 705;background:#e9eef3;border-radius:5px}
-.zone{cursor:pointer}.zone:hover .outline{stroke:#063d58;stroke-width:4}.zone.selected .outline{stroke:#0a4b79;stroke-width:4}
-.maptext{font-size:12px;fill:#0a273a;font-weight:750;stroke:none;pointer-events:none;text-anchor:middle;letter-spacing:0}
-.maptext.small{font-size:10px}.maptext.office{fill:#fff;stroke:none}
-.maptext.number{font-size:12px;font-weight:800}
-.maptext.office.number{font-size:12px}
-.mapcard.ghost{opacity:.18;filter:grayscale(1);pointer-events:none}
-.detailcard.ghost{opacity:.35;pointer-events:none}
-.blank-mark{stroke:#9da9b5;stroke-width:2;stroke-linecap:round;opacity:.6}
-@media(min-width:751px){.maps,.details{grid-template-columns:repeat(2,minmax(0,1fr))!important}.maps.single .mapcard{max-width:none;width:auto;margin:0}}
-@media(max-width:750px){.mapcard.ghost,.detailcard.ghost{display:none!important}}
-
-.details{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.detailcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;min-height:80px}
-.detailcard h3{margin:0 0 8px;font-size:13px;color:#073b4e}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:11px}.stats span{background:#f4f8fb;padding:7px;border-radius:6px}
-.stats strong{display:block;color:#153f59;font-size:13px;margin-top:3px}
-.notice{font-size:10px;color:#647f91;margin:8px 0}
-#noMap{display:none;padding:35px 12px;text-align:center;background:white;border:1px dashed #b7d0de;border-radius:10px}
-@keyframes snowfall{from{transform:translateY(-12px);opacity:0}15%{opacity:.8}85%{opacity:.7}to{transform:translateY(var(--fall));opacity:0}}
-@media(max-width:750px){main{padding:7px}.maps,.details{grid-template-columns:1fr}.kpis{gap:4px}.kpi{padding:6px 5px}.kpi small{font-size:7px}.kpi strong{font-size:clamp(11px,3vw,17px)}.mapcard{padding:5px}.mapcard h2{font-size:12px}.toolbar{gap:5px}.toolbar button{padding:8px 9px}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-
-/* V17: Three distinct compact filter panels, aligned together at the left. */
-.filter-strip{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;margin:0 0 10px}
-.filter-strip .toolbar{border:1px solid #d6e4ee;border-radius:10px;background:#fff;padding:7px 9px;box-shadow:0 2px 7px rgba(16,53,79,.05);margin:0;gap:4px}
-.filter-strip .toolbar label{min-width:0;white-space:nowrap;margin-right:5px;font-size:10px}
-@media(min-width:751px){
- .filter-strip{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;padding-bottom:3px}
- .filter-strip .toolbar{display:inline-flex;flex:0 0 auto;flex-wrap:nowrap;white-space:nowrap;justify-content:flex-start}
- .filter-strip .toolbar button{padding:6px 7px;font-size:10px;white-space:nowrap}
- .filter-strip #statusControls{flex:0 0 auto;justify-content:flex-start;margin-left:0}
-}
-@media(max-width:750px){
- .filter-strip{display:flex;flex-direction:column;align-items:stretch;gap:7px}
- .filter-strip .toolbar{display:flex;flex-wrap:wrap;gap:5px}
- .filter-strip .toolbar label{min-width:88px}
-}
-/* Desktop keeps its original LIGHT corporate colours regardless of OS theme. */
-:root{color-scheme:only light}html,body{color-scheme:only light}
-/* V18: Force light theme on all devices; no OS dark-mode overrides. */
-/* Underlined floor titles: both floor maps, all screen sizes. */
-.mapcard h2{font-weight:900;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;letter-spacing:.5px;padding-bottom:6px}
-
-/* V19: exact maroon indicator, not a platform-dependent purple emoji. */
-.status-dot{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:4px}
-.maroon-dot{background:#800020;box-shadow:inset 0 0 0 1px #650018}
-/* Keep desktop three panels on one line, together at the left. */
-@media(min-width:751px){.filter-strip{justify-content:flex-start}.filter-strip .toolbar{flex-shrink:0}}
-/* Mobile-only: status controls are easy to find; Available and Non-Selling
-   sit immediately below the All / Rented / Utilized buttons. */
-@media(max-width:750px){
- #statusControls{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px!important;align-items:stretch}
- #statusControls label{grid-column:1/-1;min-width:0!important;margin:0 0 2px}
- #statusControls button{min-width:0;padding:9px 3px;font-size:10px;white-space:normal;overflow-wrap:anywhere}
- #statusControls button[data-status="all"]{grid-column:1;grid-row:2}
- #statusControls button[data-status="rented"]{grid-column:2;grid-row:2}
- #statusControls button[data-status="utilized"]{grid-column:3;grid-row:2}
- #statusControls button[data-status="available"]{grid-column:1 / span 2;grid-row:3}
- #statusControls button[data-status="nonSelling"]{grid-column:3;grid-row:3}
- .mapcard h2{font-size:13px;line-height:1.35}
-}
-
-/* V20: sharp type and consistent light interface */
-html,body{color-scheme:light!important;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-button{font-family:Arial,Helvetica,sans-serif;letter-spacing:0;font-weight:700}
-.maptext{font-family:Arial,Helvetica,sans-serif;font-weight:800;text-rendering:geometricPrecision;paint-order:normal}
-.mapframe{shape-rendering:geometricPrecision}
-/* Floor and storage on first row; area status is its own clear row */
-.filter-strip{display:grid!important;grid-template-columns:max-content max-content;gap:8px;justify-content:start;align-items:stretch;overflow:visible!important}
-.filter-strip #statusControls{grid-column:1/-1;justify-self:start;margin:0!important}
-.filter-strip .toolbar{min-width:0;box-shadow:0 2px 7px rgba(16,53,79,.05)}
-.toolbar button[data-status="rented"]{border-color:#00a76b;background:#e7f9ee;color:#07653e}
-.toolbar button[data-status="available"]{border-color:#e6b329;background:#fff6ce;color:#795500}
-.toolbar button[data-status="nonSelling"]{border-color:#800020;background:#fff0f3;color:#800020}
-.toolbar button[data-status].active{box-shadow:inset 0 0 0 1px currentColor}
-/* Desktop selected floor takes the whole map width; other floor is absent */
-@media(min-width:751px){
- .maps.single,.details.single{grid-template-columns:minmax(0,1fr)!important}
- .maps.single .mapcard{width:100%;max-width:1120px;margin:0 auto}
- .details.single .detailcard{width:100%;max-width:1120px;margin:0 auto}
-}
-@media(max-width:750px){
- .filter-strip{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px}
- #floorControls,#typeControls{grid-column:auto;display:flex;align-content:start;align-items:center}
- #floorControls label,#typeControls label{width:100%;min-width:0;margin-bottom:2px}
- #floorControls button,#typeControls button{padding:7px 5px;flex:1 1 auto}
- #statusControls{grid-column:1/-1;width:100%;justify-self:stretch}
- #statusControls button[data-status="available"]{grid-column:1/span 2;grid-row:3}
- #statusControls button[data-status="nonSelling"]{grid-column:3;grid-row:3}
-}
-/* Tooltip is anchored within the viewport and does not alter the map */
-.zone-tooltip{position:fixed;z-index:1000;max-width:min(330px,calc(100vw - 20px));min-width:235px;pointer-events:none;background:#fff;color:#163b52;border:1px solid #b7cddd;border-radius:11px;box-shadow:0 12px 30px #163b5238;padding:11px 12px;font:12px Arial,Helvetica,sans-serif;line-height:1.45}
-.zone-tooltip[hidden]{display:none!important}
-.zone-tooltip .tip-title{font-weight:900;font-size:14px;color:#073b4e;margin-bottom:5px}
-.zone-tooltip .tip-line{display:flex;justify-content:space-between;gap:20px;padding:3px 0;border-bottom:1px solid #edf2f6}
-.zone-tooltip .tip-line:last-child{border-bottom:0}
-.zone-tooltip .tip-line strong{font-variant-numeric:tabular-nums;white-space:nowrap}
-.zone:focus-visible .outline{stroke:#073b4e;stroke-width:5}
-
-/* V21: keep a single selected floor at exactly the Both-view map size. */
-@media(min-width:751px){
- .maps.single,.details.single{grid-template-columns:repeat(2,minmax(0,1fr))!important}
- .maps.single .mapcard,.details.single .detailcard{width:100%!important;max-width:none!important;margin:0!important;grid-column:1!important}
-}
-/* Legible compact SVG labels, without forcing wide text into narrow bays. */
-.maptext{font-weight:700!important;letter-spacing:0!important}
-.maptext.number{font-weight:700!important}
-.zone-tooltip{font-size:10px!important;min-width:175px!important;max-width:min(255px,calc(100vw - 18px))!important;padding:7px 9px!important}
-.zone-tooltip .tip-title{font-size:11px!important;margin-bottom:3px!important}
-.zone-tooltip .tip-line{padding:2px 0!important;gap:12px!important}
-.stats{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
-
-
-/* V22: compact professional heading and KPI cards; preserve map/filter behavior */
-h1{font-size:14px;line-height:1.35;font-weight:800;letter-spacing:.01em;margin:0 0 10px}
-.kpis{grid-template-columns:repeat(5,minmax(0,1fr));max-width:1020px;gap:8px;margin:8px 0 12px}
-.kpi{padding:6px 9px;min-height:54px;border-radius:8px;border-top-width:3px}
-.kpi small{font-size:9px;line-height:1.25}
-.kpi strong{font-size:clamp(14px,1.25vw,18px);line-height:1.25;margin-top:3px}
-@media(max-width:750px){
- h1{font-size:12px;margin:0 0 9px}
- .kpis{grid-template-columns:repeat(2,minmax(0,1fr));max-width:100%;gap:7px}
- .kpi{min-height:52px;padding:7px 9px}
- .kpi small{font-size:9px}
- .kpi strong{font-size:16px}
- .kpi:last-child:nth-child(odd){grid-column:1/-1;max-width:calc(50% - 3.5px);width:100%}
-}
-
-/* V24: mobile status buttons occupy consecutive slots without gaps. */
-@media(max-width:750px){
- #statusControls{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-flow:row!important}
- #statusControls button[data-status]{grid-column:auto!important;grid-row:auto!important;min-width:0!important}
- #statusControls label{grid-column:1/-1!important;grid-row:auto!important}
-}
-</style></head><body><main>
-<h1>GREEN BUILDING — INTERACTIVE ZONE MAP</h1>
-
-<div class="filter-strip"><div class="toolbar" id="floorControls" aria-label="Floor filters"></div>
-<div class="toolbar" id="typeControls" aria-label="Storage type filters"></div>
-<div class="toolbar" id="statusControls" aria-label="Area status filters"></div></div>
-<div class="kpis" id="kpis"></div>
-<div id="zoneTooltip" class="zone-tooltip" role="status" aria-live="polite" hidden></div>
-<div class="maps" id="maps">
-<section class="mapcard" data-floor="ground"><h2>GREEN BUILDING GROUND FLOOR</h2><svg class="mapframe" id="groundMap" viewBox="0 0 900 705" role="img" aria-label="Ground Floor zone map"></svg></section>
-<section class="mapcard" data-floor="first"><h2>GREEN BUILDING FIRST FLOOR</h2><svg class="mapframe" id="firstMap" viewBox="0 0 900 705" role="img" aria-label="First Floor zone map"></svg></section>
-</div>
-<div id="noMap">Zone maps for the selected building have not been added yet. Currently available: Green Building.</div>
-<div class="details" id="details">
-<div class="detailcard" data-floor="ground"><h3>GREEN BUILDING GROUND FLOOR — ZONE DETAILS</h3><div id="groundDetail">Select a zone on the map.</div></div>
-<div class="detailcard" data-floor="first"><h3>GREEN BUILDING FIRST FLOOR — ZONE DETAILS</h3><div id="firstDetail">Select a zone on the map.</div></div>
-</div>
-<p class="notice">Figures are based on the supplied WMS snapshot, not a live WMS connection. Blank bays have no zone assigned. Status highlights use non-overlapping area portions.</p>
-</main><script>
-const FLOORS={"ground":{"data":[{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-01","total":706,"nonSelling":0,"rented":0,"utilized":0,"available":706,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-09","total":3465,"nonSelling":0,"rented":3465,"utilized":0,"available":0,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-10","total":3129,"nonSelling":0,"rented":3129,"utilized":0,"available":0,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR07-F","total":2487,"nonSelling":0,"rented":0,"utilized":1637,"available":850,"cbm":111.3087},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-18","total":1164,"nonSelling":0,"rented":0,"utilized":0,"available":1164,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-16","total":1500,"nonSelling":0,"rented":0,"utilized":0,"available":1500,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-14","total":1236,"nonSelling":0,"rented":0,"utilized":0,"available":1236,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-13","total":2472,"nonSelling":0,"rented":0,"utilized":0,"available":2472,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-12","total":2472,"nonSelling":0,"rented":0,"utilized":0,"available":2472,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-11","total":2490,"nonSelling":0,"rented":0,"utilized":2518,"available":-28,"cbm":171.25},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-08","total":2907,"nonSelling":0,"rented":2907,"utilized":0,"available":0,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-07","total":3090,"nonSelling":0,"rented":3090,"utilized":0,"available":0,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-06","total":3129,"nonSelling":0,"rented":3129,"utilized":0,"available":0,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-05","total":2991,"nonSelling":0,"rented":2991,"utilized":15857,"available":-15857,"cbm":1078.3006},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-02","total":1773,"nonSelling":0,"rented":0,"utilized":0,"available":1773,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-20","total":2535,"nonSelling":0,"rented":0,"utilized":1678,"available":857,"cbm":114.0958},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-03","total":599,"nonSelling":0,"rented":0,"utilized":0,"available":599,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR07-C","total":1230,"nonSelling":0,"rented":0,"utilized":2715,"available":-1485,"cbm":184.5878},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR07-E","total":1284,"nonSelling":0,"rented":0,"utilized":1351,"available":-67,"cbm":91.85},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR07-D","total":6454,"nonSelling":0,"rented":0,"utilized":5790,"available":664,"cbm":393.7138},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR06-A","total":3659,"nonSelling":0,"rented":0,"utilized":2754,"available":905,"cbm":187.291},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND COOL ROOM","storeType":"Temperature Control","zone":"GBGF-CR06-B","total":3659,"nonSelling":0,"rented":0,"utilized":1103,"available":2556,"cbm":75.009},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-04","total":2528,"nonSelling":0,"rented":0,"utilized":1447,"available":1081,"cbm":98.3870000000006},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-19","total":1164,"nonSelling":0,"rented":0,"utilized":0,"available":1164,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-17","total":1500,"nonSelling":0,"rented":0,"utilized":388,"available":1112,"cbm":26.4},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBGF-15","total":1236,"nonSelling":0,"rented":0,"utilized":0,"available":1236,"cbm":0},{"building":"GREEN BUILDING","floor":"Ground Floor","subLocation":"GROUND FLOOR","storeType":"Ambient","zone":"GBG1","total":885,"nonSelling":0,"rented":0,"utilized":0,"available":885,"cbm":0}],"shapes":{"GBGF-CR07-C":"14,28 186,28 186,95 14,95","GBGF-CR07-E":"14,95 186,95 186,163 14,163","GBGF-CR06-A":"14,163 186,163 186,282 100,282 100,631 14,631","GBGF-CR06-B":"100,282 186,282 186,631 100,631","GBGF-CR07-D":"186,28 272,28 272,697 186,697","GBGF-CR07-F":"272,430 358,430 358,697 272,697","GBGF-04":"14,631 186,631 186,697 14,697","GBGF-09":"272,28 358,28 358,430 272,430","GBGF-10":"358,94 444,94 444,430 358,430","GBGF-01":"358,28 434,28 434,94 358,94","GBG1":"434,28 530,28 530,94 434,94","GBGF-18":"530,28 698,28 698,94 530,94","GBGF-19":"704,28 872,28 872,94 704,94","GBGF-16":"444,94 658,94 658,159 444,159","GBGF-17":"660,94 872,94 872,165 660,165","GBGF-14":"444,165 613,165 613,226 444,226","GBGF-15":"620,165 786,165 786,226 620,226","GBGF-13":"444,233 786,233 786,293 444,293","GBGF-12":"444,300 786,300 786,360 444,360","GBGF-11":"444,365 786,365 786,430 444,430","GBGF-08":"358,430 786,430 786,497 358,497","GBGF-07":"358,497 786,497 786,564 358,564","GBGF-06":"358,564 786,564 786,631 358,631","GBGF-05":"358,631 786,631 786,697 358,697","GBGF-02":"792,165 872,165 872,360 792,360","GBGF-20":"792,365 872,365 872,631 792,631","GBGF-03":"792,635 872,635 872,697 792,697"}},"first":{"data":[{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GB OFFICE","total":6470,"nonSelling":6470,"rented":0,"utilized":0,"available":0,"cbm":0.0},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-28","total":1425,"nonSelling":0,"rented":0,"utilized":172,"available":1253,"cbm":11.69},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-29","total":1222,"nonSelling":0,"rented":0,"utilized":328,"available":894,"cbm":22.3},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-30","total":1222,"nonSelling":0,"rented":0,"utilized":660,"available":562,"cbm":44.91},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-31","total":1222,"nonSelling":0,"rented":0,"utilized":757,"available":465,"cbm":51.48},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-32","total":1222,"nonSelling":0,"rented":0,"utilized":385,"available":837,"cbm":26.2},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-33","total":1222,"nonSelling":0,"rented":0,"utilized":1107,"available":115,"cbm":75.25},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-34","total":1222,"nonSelling":0,"rented":0,"utilized":1055,"available":167,"cbm":71.75},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-35","total":1222,"nonSelling":0,"rented":0,"utilized":216,"available":1006,"cbm":14.67},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-20","total":1790,"nonSelling":0,"rented":0,"utilized":960,"available":830,"cbm":65.28},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-21","total":1860,"nonSelling":0,"rented":0,"utilized":838,"available":1022,"cbm":57.0},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-22","total":1860,"nonSelling":0,"rented":0,"utilized":1110,"available":750,"cbm":75.51},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-23","total":1860,"nonSelling":0,"rented":0,"utilized":0,"available":1860,"cbm":0.0},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-24","total":1860,"nonSelling":0,"rented":0,"utilized":323,"available":1537,"cbm":21.984},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-25","total":1860,"nonSelling":0,"rented":0,"utilized":325,"available":1535,"cbm":22.08},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-26","total":1860,"nonSelling":0,"rented":0,"utilized":305,"available":1555,"cbm":20.75},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-27","total":1860,"nonSelling":0,"rented":0,"utilized":765,"available":1095,"cbm":52.032},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-11","total":1837,"nonSelling":280,"rented":0,"utilized":620,"available":937,"cbm":42.1523},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-12","total":1860,"nonSelling":280,"rented":0,"utilized":350,"available":1230,"cbm":23.794},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-13","total":1860,"nonSelling":280,"rented":0,"utilized":1069,"available":511,"cbm":72.662},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-14","total":1860,"nonSelling":280,"rented":0,"utilized":1198,"available":382,"cbm":81.47},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-15","total":1860,"nonSelling":280,"rented":0,"utilized":1191,"available":389,"cbm":80.97},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-16","total":1860,"nonSelling":280,"rented":0,"utilized":872,"available":708,"cbm":59.27},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-17","total":1860,"nonSelling":280,"rented":0,"utilized":1194,"available":386,"cbm":81.21},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-18","total":1860,"nonSelling":270,"rented":0,"utilized":1144,"available":446,"cbm":77.763},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-19","total":1860,"nonSelling":0,"rented":0,"utilized":291,"available":1569,"cbm":19.764},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-04","total":1514,"nonSelling":0,"rented":0,"utilized":13,"available":1501,"cbm":0.888},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-05","total":1222,"nonSelling":0,"rented":0,"utilized":65,"available":1157,"cbm":4.416},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-06","total":1222,"nonSelling":0,"rented":0,"utilized":383,"available":839,"cbm":26.064},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-07","total":1222,"nonSelling":0,"rented":0,"utilized":806,"available":416,"cbm":54.814},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-08","total":1222,"nonSelling":0,"rented":0,"utilized":460,"available":762,"cbm":31.258},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-09","total":1222,"nonSelling":0,"rented":0,"utilized":186,"available":1036,"cbm":12.63},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-10","total":1039,"nonSelling":0,"rented":0,"utilized":305,"available":734,"cbm":20.748},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-01","total":970,"nonSelling":0,"rented":0,"utilized":0,"available":970,"cbm":0.0},{"building":"GREEN BUILDING","floor":"First Floor (Mezzanine)","subLocation":"MEZZANINE FLOOR","storeType":"Ambient","zone":"GBMF-03","total":668,"nonSelling":0,"rented":0,"utilized":0,"available":668,"cbm":-0.014}],"shapes":{"GB OFFICE":"13,28 99,28 99,695 13,695","GBMF-03":"100,29 182,29 182,92 100,92","GBMF-28":"187,29 268,29 268,159 187,159","GBMF-29":"272,29 353,29 353,159 272,159","GBMF-30":"357,29 438,29 438,159 357,159","GBMF-31":"442,29 523,29 523,159 442,159","GBMF-32":"527,29 608,29 608,159 527,159","GBMF-33":"612,29 693,29 693,159 612,159","GBMF-34":"697,29 778,29 778,159 697,159","GBMF-35":"782,29 867,29 867,159 782,159","GBMF-20":"102,164 183,164 183,359 102,359","GBMF-21":"187,164 268,164 268,359 187,359","GBMF-22":"272,164 353,164 353,359 272,359","GBMF-23":"357,164 438,164 438,359 357,359","GBMF-24":"442,164 523,164 523,359 442,359","GBMF-25":"527,164 608,164 608,359 527,359","GBMF-26":"612,164 693,164 693,359 612,359","GBMF-27":"697,164 782,164 782,359 697,359","GBMF-11":"102,365 183,365 183,560 102,560","GBMF-12":"187,365 268,365 268,560 187,560","GBMF-13":"272,365 353,365 353,560 272,560","GBMF-14":"357,365 438,365 438,560 357,560","GBMF-15":"442,365 523,365 523,560 442,560","GBMF-16":"527,365 608,365 608,560 527,560","GBMF-17":"612,365 693,365 693,560 612,560","GBMF-18":"697,365 778,365 778,560 697,560","GBMF-19":"782,365 867,365 867,560 782,560","GBMF-01":"100,635 182,635 182,695 100,695","GBMF-04":"187,566 268,566 268,695 187,695","GBMF-05":"272,566 353,566 353,695 272,695","GBMF-06":"357,566 438,566 438,695 357,695","GBMF-07":"442,566 523,566 523,695 442,695","GBMF-08":"527,566 608,566 608,695 527,695","GBMF-09":"612,566 693,566 693,695 612,695","GBMF-10":"697,566 778,566 778,695 697,695"}}};
-const COLORS={rented:'#00a76b',utilized:'#087af5',available:'#ffbc08',nonSelling:'#800020'};
-const KEYS=['rented','utilized','available','nonSelling'];
-const LABELS={rented:'Rented',utilized:'Utilized',available:'Available',nonSelling:'Non-Selling'};
-const FIXED={'GB OFFICE':true,'GBGF-01':true,'GBG1':true};
-let status='all',floorFilter='all',typeFilter='all',selected={ground:null,first:null},building='GREEN BUILDING',frames=0;
-const fmt=v=>Math.round(Number(v)||0).toLocaleString('en-US');
-const ns='http://www.w3.org/2000/svg';
-function el(tag,attrs={},parent){const n=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.appendChild(n);return n}
-function t(parent,x,y,content,cls){const n=el('text',{x,y,class:cls},parent);n.textContent=content;return n}
-function eligible(z){return typeFilter==='all'||(typeFilter==='ambient'?z.storeType==='Ambient':z.storeType==='Temperature Control')}
-function floorList(){return floorFilter==='all'?['ground','first']:[floorFilter]}
-function visibleData(){return floorList().flatMap(f=>FLOORS[f].data.filter(eligible))}
-function portion(z){let rest=Math.max(0,z.total),off=0,parts={};for(const key of ['nonSelling','rented','utilized','available']){const raw=Math.max(0,Number(z[key])||0),amount=Math.min(rest,raw);parts[key]={amount,off};rest-=amount;off+=amount}return parts}
-function renderMap(floor){
- const {data,shapes}=FLOORS[floor],svg=document.getElementById(floor+'Map');
- svg.replaceChildren();el('rect',{x:0,y:0,width:900,height:705,fill:'#e8edf1'},svg);
- if(floor==='first'){
-   for(const [x,y,w,h] of [[100,97,82,62],[782,164,85,195],[100,566,82,62],[782,566,85,129]]){
-     el('rect',{x,y,width:w,height:h,fill:'#e6eaee',stroke:'#b8c1cd','stroke-width':2.5},svg);
-     el('path',{d:`M ${x+12} ${y+12} L ${x+w-12} ${y+h-12} M ${x+w-12} ${y+12} L ${x+12} ${y+h-12}`,class:'blank-mark'},svg);
-   }
- }
- const defs=el('defs',{},svg);
- for(const z of data){const shape=shapes[z.zone];if(!shape)continue;
-  const pairs=shape.split(' ').map(q=>q.split(',').map(Number)),xs=pairs.map(q=>q[0]),ys=pairs.map(q=>q[1]);
-  const x=Math.min(...xs),y=Math.min(...ys),w=Math.max(...xs)-x,h=Math.max(...ys)-y;
-  const group=el('g',{class:'zone'+(selected[floor]===z.zone?' selected':''),tabindex:0,role:'button','aria-label':z.zone},svg);
-  const clipId=floor+'-'+z.zone.replace(/[^a-z0-9]/gi,'-');const clip=el('clipPath',{id:clipId},defs);el('polygon',{points:shape},clip);
-  const fixed=z.zone==='GB OFFICE'||z.zone==='GBGF-01'||z.zone==='GBG1';
-  const matching=eligible(z);group.style.opacity=matching?'1':'0.09';group.style.pointerEvents=matching?'auto':'none';
-  el('polygon',{points:shape,fill:fixed?'#912ad6':'#fff8b5'},group);
-  if(!fixed&&matching){
-   // All Areas draws the four non-overlapping status bands; a selected status draws only its own band.
-   const parts=portion(z);
-   for(const key of (status==='all'?['nonSelling','rented','utilized','available']:[status])){
-     const p=parts[key];if(!p||p.amount<=0)continue;
-     const height=h*p.amount/Math.max(1,z.total);
-     const r=el('rect',{x,y:y+h*p.off/Math.max(1,z.total),width:w,height:0,fill:COLORS[key],'clip-path':`url(#${clipId})`},group);
-     r.dataset.finalHeight=height;
-   }
-  }
-  if(matching&&typeFilter==='cool'&&z.storeType==='Temperature Control'){
-   const snow=el('g',{'clip-path':`url(#${clipId})`,class:'snow'},group);
-   for(let j=0;j<7;j++){const flake=el('circle',{cx:x+8+(j*17)%(Math.max(20,w-12)),cy:y+10+(j*23)%(Math.max(20,h-20)),r:j%3===0?2.1:1.5,fill:'#fff',opacity:'.76'},snow);flake.style.animation=`snowfall ${3+j%3}s linear ${-(j*.6)}s infinite`;flake.style.setProperty('--fall',Math.max(30,h-12)+'px')}
-  }
-  const outline=el('polygon',{points:shape,fill:'transparent',stroke:'#b6bde7','stroke-width':2.6,class:'outline'},group);
-  const cx=x+w/2,cy=y+h/2;
-  const isNarrow=w<95, isShort=h<77;
-  const fs=isNarrow?7.8:9.1;
-  const label=t(group,cx,cy-(isShort?6:9),z.zone,'maptext'+(fixed?' office':''));
-  label.setAttribute('font-size',fs);
-  label.setAttribute('textLength',Math.min(w-9,z.zone.length*fs*.56));
-  label.setAttribute('lengthAdjust','spacingAndGlyphs');
-  const val=t(group,cx,cy+(isShort?10:11),fmt(z.total),'maptext number'+(fixed?' office':''));
-  val.setAttribute('font-size',isNarrow?8.5:9.5);
-  if(w<65){label.setAttribute('font-size',7);val.setAttribute('font-size',7.5)}
-  group.addEventListener('click',e=>{selectZone(floor,z,group,e);});
-  group.addEventListener('pointerenter',e=>showZoneTooltip(z,e));
-  group.addEventListener('pointermove',e=>moveZoneTooltip(e));
-  group.addEventListener('pointerleave',()=>{if(selected[floor]!==z.zone)hideZoneTooltip()});
-  group.addEventListener('focus',()=>showZoneTooltip(z,group.getBoundingClientRect()));
-  group.addEventListener('blur',()=>{if(selected[floor]!==z.zone)hideZoneTooltip()});
-  group.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();group.dispatchEvent(new MouseEvent('click'))}});
- }
-}
-
-const tooltip=document.getElementById('zoneTooltip');
-function zoneMetricItems(z){
- const rows=[['TOTAL AREA',z.total],['RENTED',z.rented],['UTILIZED',z.utilized],['NON-SELLING',z.nonSelling],['BALANCE / AVAILABLE',z.available]];
- // Total is always useful; show only non-zero status figures, including a negative
- // balance when the source WMS snapshot reports an over-allocated zone.
- return rows.filter(([name,value])=>name==='TOTAL AREA'||Math.abs(Number(value)||0)>0.00001);
-}
-function tooltipHtml(z){
- return `<div class="tip-title">${z.zone}</div>`+zoneMetricItems(z).map(([name,value])=>`<div class="tip-line"><span>${name}</span><strong>${Number(value).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></div>`).join('');
-}
-function moveZoneTooltip(e){
- if(tooltip.hidden)return;
- const r=tooltip.getBoundingClientRect();
- let x,y;
- if(e && typeof e.clientX==='number'){x=e.clientX+15;y=e.clientY+15;}
- else if(e && typeof e.left==='number'){x=e.right+10;y=e.top+10;}
- else{x=12;y=12;}
- tooltip.style.left=Math.max(8,Math.min(x,window.innerWidth-r.width-8))+'px';
- tooltip.style.top=Math.max(8,Math.min(y,window.innerHeight-r.height-8))+'px';
-}
-function showZoneTooltip(z,e){tooltip.innerHTML=tooltipHtml(z);tooltip.hidden=false;moveZoneTooltip(e)}
-function hideZoneTooltip(){tooltip.hidden=true}
-function selectZone(floor,z,group,e){
- document.getElementById(floor+'Map').querySelectorAll('.zone.selected').forEach(node=>node.classList.remove('selected'));
- group.classList.add('selected');selected[floor]=z.zone;
- renderDetail(floor);showZoneTooltip(z,e);
- requestAnimationFrame(reportHeight);
-}
-
-function renderDetail(floor){
- const z=FLOORS[floor].data.find(z=>z.zone===selected[floor]&&eligible(z));
- const items=z?zoneMetricItems(z):[];
- document.getElementById(floor+'Detail').innerHTML=z?`<strong>${z.zone}</strong><div class="stats">${items.map(([k,v])=>`<span>${k}<strong>${Number(v).toLocaleString('en-US',{maximumFractionDigits:2})} sq.ft.</strong></span>`).join('')}</div>`:'Select a zone on the map.';
-}
-function animate(){
- // Frame timestamps come from requestAnimationFrame itself, never from a different clock.
- // This prevents negative progress and negative KPI values during first render.
- cancelAnimationFrame(frames);
- const rects=[...document.querySelectorAll('rect[data-final-height]')];
- const nums=[...document.querySelectorAll('[data-amount]')];
- const duration=700;
- let start=null;
- const targets=nums.map(n=>Math.max(0,Number(n.dataset.amount)||0));
- function paint(progress){
-   const p=Math.min(1,Math.max(0,progress));
-   const eased=1-Math.pow(1-p,3);
-   rects.forEach(r=>r.setAttribute('height',Math.max(0,(Number(r.dataset.finalHeight)||0)*eased)));
-   nums.forEach((n,i)=>n.textContent=fmt(Math.max(0,targets[i]*eased)));
- }
- if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){paint(1);return;}
- paint(0);
- function tick(timestamp){
-   if(start===null)start=timestamp;
-   const elapsed=Math.max(0,timestamp-start);
-   const p=Math.min(1,elapsed/duration);
-   paint(p);
-   if(p<1)frames=requestAnimationFrame(tick);
- }
- frames=requestAnimationFrame(tick);
-}
-
-function totals(){const all=visibleData();return Object.fromEntries(['total',...KEYS].map(k=>[k,all.reduce((s,z)=>s+Math.max(0,Number(z[k])||0),0)]))}
-function reportHeight(){
- if(window.parent!==window)window.parent.postMessage({type:'gtl-zone-height',height:document.documentElement.scrollHeight},location.origin);
-}
+*{box-sizing:border-box}body{margin:0;background:#f5f8fb;font-family:Inter,Arial,sans-serif;color:#14354a}
+main{max-width:1500px;margin:auto;padding:18px}h1{font-size:21px;margin:0 0 6px}p{color:#62798b;font-size:12px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;background:#fff;border:1px solid #dce6ee;border-radius:14px;padding:14px;margin:15px 0}
+label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800}select,input{padding:9px;border:1px solid #cbdce6;border-radius:8px;background:white;min-width:165px}
+.layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(310px,1fr);gap:15px}
+.card{background:white;border:1px solid #dce6ee;border-radius:14px;padding:14px;min-width:0}
+.map{display:block;width:100%;height:auto;max-height:680px;object-fit:contain;background:white}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.badge{border-radius:8px;background:#eaf2f7;padding:8px 10px;font-size:12px;font-weight:700}
+.zone-list{max-height:480px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:7px}
+.zone{cursor:pointer;text-align:left;border:1px solid #d9e5ee;background:#f8fbfd;border-radius:9px;padding:10px;color:#173b51;font-size:12px}
+.zone strong{display:block;overflow-wrap:anywhere}.zone small{display:block;margin-top:4px;color:#5c7283}
+.zone.active{outline:2px solid #087af5;background:#eaf4ff}
+.zone[data-status="rented"]{border-left:5px solid #00a76b}.zone[data-status="used"]{border-left:5px solid #087af5}
+.zone[data-status="balance"]{border-left:5px solid #efb31b}.zone[data-status="non"]{border-left:5px solid #b34975}
+.detail{margin-top:12px;padding:12px;border-radius:10px;background:#f0f6fa;font-size:13px;line-height:1.8}
+.warn{font-size:11px;color:#795e20;background:#fff9e7;padding:9px;border-radius:8px;margin-top:9px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.filters label{flex:1;min-width:150px}.filters select,.filters input{width:100%}}
+</style></head><body><main><h1>WAREHOUSE ZONE-WISE FLOOR MAPS</h1><p>GTL Global Park • Floor layout and zone-level space utilization • TEST Version</p>
+<div class="filters"><label>BUILDING<select id="building"></select></label><label>FLOOR<select id="floor"></select></label>
+<label>AREA STATUS<select id="status"><option value="ALL">All Areas</option><option value="rented">Rented</option><option value="used">Utilized</option><option value="balance">Available</option><option value="non">Non-Selling</option></select></label>
+<label>SEARCH ZONE<input id="search" placeholder="Zone ID / location"></label></div>
+<div class="layout"><section class="card"><h3 id="mapTitle">Floor layout</h3><img id="map" class="map" alt="Warehouse floor map"><div class="badges" id="totals"></div><p class="warn">The map is a static PNG reference. Select a zone from the linked list for its actual figures. Exact on-image clickable zone boundaries require coordinate mapping; no locations are guessed.</p></section>
+<section class="card"><h3>ZONE DETAILS <span id="count"></span></h3><div id="zones" class="zone-list"></div><div id="detail" class="detail">Select a zone to view area details.</div></section></div></main>
+<script>
+const MAPS={"GTL BUILDING": {"ground": "maps/gtl-building-ground.png", "first": "maps/gtl-building-first.png"}, "GREEN BUILDING": {"ground": "maps/green-building-ground.png", "first": "maps/green-building-first.png"}, "B3 BUILDING": {"ground": "maps/b3-building-ground.png"}, "B2 BUILDING": {"ground": "maps/b2-building-ground.png", "first": "maps/b2-building-first.png"}, "B1 BUILDING": {"ground": "maps/b1-building-ground.png", "first": "maps/b1-building-first.png"}, "US LANKA": {"ground": "maps/us-lanka-ground.png"}, "INDOLANKA": {"ground": "maps/indolanka-ground.png"}};
+const ORDER=["GTL BUILDING","GREEN BUILDING","B3 BUILDING","B2 BUILDING","B1 BUILDING","US LANKA","INDOLANKA"];
+let records=[],selection=null;
+const $=id=>document.getElementById(id),fmt=n=>(Number(n)||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const floorType=s=>/ground/i.test(s)?"ground":/first|mezz/i.test(s)?"first":"other";
+const n=(r,k)=>Math.max(0,Number(r[k])||0);
+const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function setOptions(el,options,previous){el.innerHTML="";options.forEach(([v,t])=>el.add(new Option(t,v)));el.value=options.some(o=>o[0]===previous)?previous:options[0]?.[0]||""}
+function setBuildings(){const old=$("building").value;setOptions($("building"),[["ALL","All Warehouses"],...ORDER.map(b=>[b,b])],old);setFloors()}
+function setFloors(){const b=$("building").value,old=$("floor").value;
+const available=[...new Set(records.filter(r=>b==="ALL"||r.building===b).map(r=>floorType(r.floor)))];
+const options=[["ALL","All Floors"]];if(available.includes("ground"))options.push(["ground","Ground Floor"]);if(available.includes("first"))options.push(["first","First / Mezzanine Floor"]);
+setOptions($("floor"),options,old);render()}
+function details(r){return `<b>${esc(r.zone||"UNASSIGNED ZONE")}</b> • ${esc(r.building)} / ${esc(r.floor)}<br>
+Sub-location: ${esc(r.subLocation||"—")}<br>Store type: ${esc(r.storeType||"—")}<br>
+Total: <b>${fmt(r.total)} SQFT</b><br>Rented: ${fmt(r.rented)} • Utilized: ${fmt(r.used)}<br>
+Available: ${fmt(n(r,"balance"))} • Non-Selling: ${fmt(r.non)}<br>CBM: ${fmt(r.cbm)}`}
 function render(){
- const visible=building==='ALL'||building==='GREEN BUILDING';
- document.getElementById('maps').style.display=visible?'':'none';
- document.getElementById('details').style.display=visible?'':'none';
- document.getElementById('noMap').style.display=visible?'none':'block';
- document.getElementById('statusControls').style.display=visible?'flex':'none';
- document.getElementById('floorControls').style.display=visible?'flex':'none';
- document.getElementById('typeControls').style.display=visible?'flex':'none';
- document.getElementById('kpis').style.display=visible?'grid':'none';
- if(!visible){reportHeight();return;}
- const activeFloors=floorList();
- document.querySelectorAll('.mapcard').forEach(card=>{const on=activeFloors.includes(card.dataset.floor);card.style.display=on?'':'none';card.classList.remove('ghost');card.setAttribute('aria-hidden',String(!on))});
- document.querySelectorAll('.detailcard').forEach(card=>{const on=activeFloors.includes(card.dataset.floor);card.style.display=on?'':'none';card.classList.remove('ghost')});
- document.getElementById('maps').classList.toggle('single',activeFloors.length===1);
- document.getElementById('details').classList.toggle('single',activeFloors.length===1);
- hideZoneTooltip();
- document.getElementById('floorControls').innerHTML='<label>FLOOR</label>'+[['all','🏢 Both'],['ground','🏬 Ground'],['first','🏢 First']].map(([k,l])=>`<button data-floor="${k}" class="${floorFilter===k?'active':''}">${l}</button>`).join('');
- document.getElementById('typeControls').innerHTML='<label>STORAGE TYPE</label>'+[['all','📦 All Types'],['ambient','🌤 Ambient'],['cool','❄ Cool Room']].filter(([k])=>k==='all'||(k==='ambient'?floorList().some(f=>FLOORS[f].data.some(z=>z.storeType==='Ambient')):floorList().some(f=>FLOORS[f].data.some(z=>z.storeType==='Temperature Control')))).map(([k,l])=>`<button data-type="${k}" class="${typeFilter===k?'active':''}">${l}</button>`).join('');
- const sums=totals();
- if(status!=='all'&&!sums[status])status='all';
- document.getElementById('statusControls').innerHTML='<label>AREA STATUS</label>'+[['all','◉ All'],...KEYS.filter(k=>sums[k]>0).map(k=>[k,({rented:'🟢',utilized:'🔵',available:'🟡',nonSelling:'<span class="status-dot maroon-dot" aria-hidden="true"></span>'})[k]+' '+LABELS[k]])].map(([k,l])=>`<button data-status="${k}" class="${status===k?'active':''}" aria-pressed="${status===k}">${l}</button>`).join('');
- document.getElementById('kpis').innerHTML=[['total','TOTAL AREA','#073b4e'],...KEYS.filter(k=>sums[k]>0).map(k=>[k,LABELS[k].toUpperCase(),COLORS[k]])].map(([k,l,c])=>`<button class="kpi ${status===k||(k==='total'&&status==='all')?'active':''}" style="--tone:${c}" data-status="${k==='total'?'all':k}"><small>${l}</small><strong data-amount="${sums[k]}">0</strong></button>`).join('');
- ['ground','first'].forEach(f=>{renderMap(f);renderDetail(f)});
- animate();requestAnimationFrame(reportHeight);
+const b=$("building").value,f=$("floor").value,st=$("status").value,q=$("search").value.toLowerCase();
+const all=records.filter(r=>(b==="ALL"||r.building===b)&&(f==="ALL"||floorType(r.floor)===f));
+const view=all.filter(r=>(st==="ALL"||n(r,st)>0)&&(!q||(r.zone+" "+r.subLocation).toLowerCase().includes(q)));
+$("count").textContent="("+view.length+")";
+const mapB=b==="ALL"?"GTL BUILDING":b,mapF=f==="ALL"?"ground":f;
+$("mapTitle").textContent=mapB+" — "+(mapF==="ground"?"Ground Floor":"First / Mezzanine Floor");
+$("map").src=MAPS[mapB]?.[mapF]||"";
+$("map").style.display=MAPS[mapB]?.[mapF]?"block":"none";
+$("totals").innerHTML=[["Total","total"],["Rented","rented"],["Utilized","used"],["Available","balance"],["Non-Selling","non"]].map(([t,k])=>`<span class="badge">${t}: ${fmt(all.reduce((s,r)=>s+n(r,k),0))} SQFT</span>`).join("");
+$("zones").innerHTML=view.map((r,i)=>`<button class="zone ${selection===r?"active":""}" data-index="${i}" data-status="${st==="ALL"?["rented","used","balance","non"].find(k=>n(r,k)>0)||"":st}"><strong>${esc(r.zone||"UNASSIGNED")}</strong><small>${fmt(r.total)} SQFT</small></button>`).join("")||"<p>No matching zones.</p>";
+$("zones").querySelectorAll("button").forEach(btn=>btn.addEventListener("click",()=>{selection=view[+btn.dataset.index];$("detail").innerHTML=details(selection);render()}));
+if(selection&&!view.includes(selection)){selection=null;$("detail").textContent="Select a zone to view area details."}
 }
-document.body.addEventListener('click',e=>{const f=e.target.closest('[data-floor]');if(f){floorFilter=f.dataset.floor;if(floorFilter==='first'&&typeFilter==='cool')typeFilter='all';render();return}const t=e.target.closest('[data-type]');if(t){typeFilter=t.dataset.type;render();return}const b=e.target.closest('[data-status]');if(b){status=b.dataset.status;render()}});
-window.addEventListener('message',e=>{if(e.origin!==location.origin||!e.data)return;
-if(e.data.type==='gtl-building-filter'){building=String(e.data.building||'ALL').toUpperCase();render()}
-if(e.data.type==='gtl-replay')render()});
-window.addEventListener('resize',reportHeight);
-render();
+function receiveData(d){records=(d.rows||[]).map(r=>({...r,balance:Math.max(0,Number(r.balance)||0)}));setBuildings();
+const requested=new URLSearchParams(location.search).get("building");
+if(requested&&ORDER.includes(requested)){$("building").value=requested;setFloors()}}
+$("building").onchange=setFloors;$("floor").onchange=render;$("status").onchange=render;$("search").oninput=render;
+window.addEventListener("message",e=>{if(e.origin!==location.origin)return;
+const d=e.data||{};
+if(d.type==="gtl-zone-data")receiveData({rows:d.rows});
+if(d.type==="gtl-master-filters"){
+ if(d.building&&[...$("building").options].some(o=>o.value===d.building)){$("building").value=d.building;setFloors()}
+ if(d.floor&&[...$("floor").options].some(o=>o.value===d.floor))$("floor").value=d.floor;
+ if(d.status)$("status").value=d.status;render()
+}});
+fetch("./zone-data.json",{cache:"no-store"}).then(r=>r.json()).then(receiveData).catch(()=>{$("detail").textContent="Data unavailable. Please serve through GitHub Pages or a local HTTP server."});
+const query=new URLSearchParams(location.search).get("building");
+if(query&&ORDER.includes(query))setTimeout(()=>{$("building").value=query;setFloors()},350);
 </script></body></html>

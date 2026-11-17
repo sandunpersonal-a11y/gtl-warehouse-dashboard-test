@@ -1011,7 +1011,13 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 :root,html,body{color-scheme:only light}
 </style>
 
-</head>
+<style>
+.master-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:12px auto 18px;padding:13px 17px;border:1px solid #dbe7ee;border-radius:12px;background:#f6fafc}
+.master-filters label{font-size:11px;font-weight:800;color:#153c54;display:flex;flex-direction:column;gap:5px}
+.master-filters select{padding:9px 12px;min-width:180px;max-width:100%;border:1px solid #c6d7e2;border-radius:8px;background:white;color:#163b52}
+.master-note{font-size:11px;color:#63798a}
+@media(max-width:600px){.master-filters label{width:100%}.master-filters select{width:100%}}
+</style></head>
 
 <body>
 
@@ -1068,6 +1074,11 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   <button class="tab" id="zoneMapTab" onclick="switchPage('zoneMap')">🗺 Zone Map</button>
 </div>
 
+<div id="zoneMasterFilters" class="master-filters">
+  <label>FLOOR LEVEL <select id="masterFloor" onchange="gtlFloorChanged()"><option value="ALL">All Floors</option></select></label>
+  <label>AREA STATUS <select id="masterStatus" onchange="gtlStatusChanged()"><option value="ALL">All Areas</option><option value="rented">Rented</option><option value="used">Utilized</option><option value="balance">Available</option><option value="non">Non-Selling</option></select></label>
+  <span class="master-note">Building and floor filters update all charts. Area Status filters zone details.</span>
+</div>
 <section id="overviewPage">
 
   <div class="kpis">
@@ -1258,7 +1269,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=24-20261115" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=zonewise1" title="Green Building Ground and First Floor Interactive Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -2021,8 +2032,8 @@ function renderMaps() {
     image.alt=name+" Warehouse";
     image.loading="lazy";
 
-    image.src = WAREHOUSE_ILLUSTRATIONS[name] || (index>=0 && PHOTO_DATA[index] ? "data:image/webp;base64,"+PHOTO_DATA[index] : "");
-    image.alt = name + " illustrated warehouse thumbnail (not an actual photograph)";
+    image.src = ({"GTL BUILDING":"maps/gtl-building-ground.png","GREEN BUILDING":"maps/green-building-ground.png","B3 BUILDING":"maps/b3-building-ground.png","B2 BUILDING":"maps/b2-building-ground.png","B1 BUILDING":"maps/b1-building-ground.png","US LANKA":"maps/us-lanka-ground.png","INDOLANKA":"maps/indolanka-ground.png"})[name] || "";
+    image.alt = name + " actual warehouse floor layout";
 
     const info=document.createElement("div");
     info.className="map-info";
@@ -2031,12 +2042,12 @@ function renderMaps() {
     title.textContent=name;
     info.appendChild(title);
 
-    if(MAP_LINKS[name] && name !== "GREEN BUILDING") {
+    if(true) {
       const link=document.createElement("a");
 
       link.className="map-link";
       if(name==="GREEN BUILDING"){link.style.cssText="width:auto;min-width:110px;padding:8px 10px;font-size:11px;white-space:nowrap";}
-      link.href=MAP_LINKS[name];
+      link.href="./zone-maps.html?building="+encodeURIComponent(name);
       link.target="_blank";
       link.rel="noopener noreferrer";
       link.title="Open "+name+" Warehouse Map";
@@ -2482,6 +2493,104 @@ window.addEventListener("resize",()=>{
 // Keep the embedded original logo as fallback if an icon file is unavailable.
 $("gtlLogo").onerror = function(){ this.onerror = null; this.src = GTL_LOGO; };
 $("gtlLogo").src = "./gtl-icon-1024.png?v=26";
+
+
+/* GTL Zonewise TEST adapter: static snapshot first, Apps Script JSONP when configured.
+   IT API integration: normalize incoming data into the same row keys here. */
+const GTL_ZONE_CONFIG={source:"snapshot", apiUrl:"", refreshSeconds:120};
+let gtlZoneRecords=[];
+function gtlFloorChanged(){gtlUpdateFloors();renderDashboard();gtlSyncMap();}
+function gtlStatusChanged(){renderDashboard();gtlSyncMap();}
+function gtlUpdateFloors(){
+ const el=document.getElementById("masterFloor"),prev=el.value;
+ const b=document.getElementById("buildingFilter").value;
+ const relevant=rows.filter(r=>b==="ALL"||r.building===b);
+ const floorTypes=[...new Set(relevant.map(r=>floorType(r.floor)))];
+ el.innerHTML='<option value="ALL">All Floors</option>';
+ if(floorTypes.includes("ground"))el.add(new Option("Ground Floor","ground"));
+ if(floorTypes.includes("first"))el.add(new Option("First / Mezzanine Floor","first"));
+ el.value=[...el.options].some(o=>o.value===prev)?prev:"ALL";
+}
+function filtered(){
+ const b=document.getElementById("buildingFilter").value;
+ const f=document.getElementById("masterFloor").value;
+ return rows.filter(r=>(b==="ALL"||r.building===b)&&(f==="ALL"||floorType(r.floor)===f));
+}
+function gtlSyncMap(){
+ const frame=document.getElementById("embeddedZoneMap");
+ if(frame?.contentWindow)frame.contentWindow.postMessage({
+  type:"gtl-master-filters",building:document.getElementById("buildingFilter").value,
+  floor:document.getElementById("masterFloor").value,
+  status:document.getElementById("masterStatus").value
+ },location.origin);
+}
+function updateZoneMapBuilding(){gtlSyncMap();}
+function gtlZoneSummary(data){
+ const groups=new Map();
+ data.forEach(r=>{
+  const k=r.building+"|"+r.floor;
+  if(!groups.has(k))groups.set(k,{building:r.building,floor:r.floor,total:0,non:0,rented:0,used:0,balance:0,cbm:0});
+  const g=groups.get(k);
+  for(const key of ["total","non","rented","used","balance","cbm"])g[key]+=Number(r[key])||0;
+ });
+ return [...groups.values()];
+}
+function gtlReceiveZoneRows(data,live=false){
+ gtlZoneRecords=data.map(r=>({
+  building:String(r.building||"").trim().toUpperCase(),
+  floor:String(r.floor||"").trim(),
+  zone:String(r.zone||"").trim(),
+  subLocation:String(r.subLocation||"").trim(),
+  storeType:String(r.storeType||"").trim(),
+  total:Number(r.total)||0,non:Number(r.non)||0,rented:Number(r.rented)||0,
+  used:Number(r.used)||0,balance:Math.max(0,Number(r.balance)||0),
+  cbm:Number(r.cbm)||0
+ })).filter(r=>r.building&&r.floor);
+ rows=gtlZoneSummary(gtlZoneRecords);
+ loading=false;
+ clearTimeout(refreshTimer);
+ updateBuildingFilter();gtlUpdateFloors();
+ renderDashboard();
+ const e=document.getElementById("updated");
+ e.textContent=(live?"Live data":"Excel snapshot")+" • "+new Date().toLocaleTimeString();
+ const frame=document.getElementById("embeddedZoneMap");
+ if(frame?.contentWindow)frame.contentWindow.postMessage({type:"gtl-zone-data",rows:gtlZoneRecords},location.origin);
+}
+window.GTLReceiveZoneData=function(payload){
+ if(payload?.rows)gtlReceiveZoneRows(payload.rows,true);
+ else showError("Invalid zone-wise data received.");
+};
+function loadData(){
+ if(loading)return;
+ loading=true;
+ const api=GTL_ZONE_CONFIG.apiUrl;
+ if(GTL_ZONE_CONFIG.source==="api"&&api){
+  const cb="GTLReceiveZoneData";
+  const el=document.createElement("script");
+  el.src=api+(api.includes("?")?"&":"?")+"callback="+cb+"&_="+Date.now();
+  el.onerror=()=>{loading=false;showError("Live API unavailable; check connection and permissions.");};
+  document.head.appendChild(el);
+  setTimeout(()=>{if(loading){loading=false;showError("API timeout.");}},20000);
+  return;
+ }
+ fetch("./zone-data.json?ts="+Date.now(),{cache:"no-store"})
+ .then(r=>{if(!r.ok)throw Error("Snapshot not found");return r.json()})
+ .then(d=>gtlReceiveZoneRows(d.rows||[]))
+ .catch(err=>{loading=false;showError("Zone-wise data loading failed: "+err.message);});
+}
+const gtlOriginalRenderDashboard=renderDashboard;
+renderDashboard=function(){
+ if(!rows.length)return;
+ gtlUpdateFloors();
+ gtlOriginalRenderDashboard();
+ gtlSyncMap();
+};
+document.getElementById("buildingFilter").addEventListener("change",()=>{gtlUpdateFloors();gtlSyncMap();});
+document.getElementById("embeddedZoneMap").addEventListener("load",()=>{
+ const frame=document.getElementById("embeddedZoneMap");
+ frame.contentWindow.postMessage({type:"gtl-zone-data",rows:gtlZoneRecords},location.origin);
+ gtlSyncMap();
+});
 
 loadData();
 
