@@ -7,7 +7,7 @@ label{display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:800;
 .layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:13px}.card{background:white;border:1px solid var(--line);border-radius:13px;padding:13px;min-width:0}
 h2{font-size:17px;margin:3px 0 12px}.kpis{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.kpi{border:1px solid #d5e5ee;background:#f5f9fc;border-radius:8px;padding:9px;font-size:12px;font-weight:700}
 .map-holder{position:relative;border:1px solid #dce7ed;border-radius:9px;overflow:auto;background:#f9fbfc}.map-holder img{display:block;width:100%;height:auto;max-height:800px;object-fit:contain}
-.b2-overlay{position:absolute;inset:0;width:100%;height:100%;display:block}.b2-overlay rect{cursor:pointer;stroke:#24394b;stroke-width:.7;vector-effect:non-scaling-stroke}.b2-overlay rect:hover{stroke:#071d30;stroke-width:2.5}.note{font-size:11px;color:#627a8a;line-height:1.5}.zones{max-height:590px;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.b2-overlay[hidden]{display:none!important}.b2-overlay{position:absolute;inset:0;width:100%;height:100%;display:block}.b2-overlay rect{cursor:pointer;stroke:#24394b;stroke-width:.7;vector-effect:non-scaling-stroke}.b2-overlay rect:hover{stroke:#071d30;stroke-width:2.5}.note{font-size:11px;color:#627a8a;line-height:1.5}.zones{max-height:590px;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .zone{border:1px solid #dbe5ec;border-left:5px solid #8da7b7;border-radius:8px;background:#f8fafc;text-align:left;padding:10px;cursor:pointer;color:#15384e;overflow-wrap:anywhere}
 .zone:hover{background:#eef7ff}.zone.active{outline:2px solid #087af5;background:#e8f4ff}.zone b{display:block;font-size:12px}.zone small{font-size:11px;color:#607c8d}
 .zone.rented{border-left-color:#00a76b}.zone.utilized{border-left-color:#087af5}.zone.available{border-left-color:#e8b41b}.zone.nonSelling{border-left-color:#a00d4a}
@@ -15,7 +15,7 @@ h2{font-size:17px;margin:3px 0 12px}.kpis{display:flex;gap:7px;flex-wrap:wrap;ma
 .schematic{margin:12px 0;border:1px solid #dbe7ee;border-radius:8px;padding:8px}.schematic svg{display:block;width:100%;height:auto}.schematic polygon{cursor:pointer;stroke:#fff;stroke-width:2}.schematic polygon:hover{stroke:#073b4e;stroke-width:5}.schematic text{pointer-events:none;font-size:10px;font-weight:700;fill:#11374d;text-anchor:middle}
 .empty{padding:25px;color:#6b7f8e}.alert{color:#8b651b;background:#fff8e7;border-radius:8px;padding:9px;font-size:11px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.filters label{flex:1 1 170px}}@media(max-width:420px){.zones{grid-template-columns:1fr}}
-</style></head><body><header><h1>WAREHOUSE ZONE-WISE FLOOR MAPS</h1><p>GTL Global Park · TEST · B2 Ground Floor interactive mapping · 527 Excel records</p></header>
+</style></head><body><header><h1>WAREHOUSE ZONE-WISE FLOOR MAPS</h1><p>GTL Global Park · B2 INTERACTIVE TEST V2 · 527 Excel records</p></header>
 <main><div class="filters"><label>BUILDING<select id="building"></select></label><label>FLOOR<select id="floor"></select></label><label>AREA STATUS<select id="status"><option value="all">All Areas</option><option value="rented">Rented</option><option value="utilized">Utilized</option><option value="available">Available</option><option value="nonSelling">Non-Selling</option></select></label><label>SEARCH ZONE<input id="search" placeholder="Zone ID / location"></label></div>
 <div class="layout"><section class="card"><h2 id="title">Warehouse map</h2><div class="map-holder"><img id="map" alt="Warehouse floor plan"><svg id="b2Overlay" class="b2-overlay" viewBox="0 0 1200 400" preserveAspectRatio="none" hidden></svg></div>
 <div class="legend"><span>🟢 Rented</span><span>🔵 Utilized</span><span>🟡 Available</span><span>🔴 Non-Selling</span></div>
@@ -43,7 +43,7 @@ const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const floorType=s=>/ground/i.test(s)?"ground":/first|mezz|mezan/i.test(s)?"first":"other";
 let selected=null, current=[];
 function options(el,items,prev){el.innerHTML="";items.forEach(([v,t])=>el.add(new Option(t,v)));el.value=items.some(([v])=>v===prev)?prev:items[0]?.[0]||""}
-function setBuilding(){options($("building"),ORDER.map(x=>[x,x]),new URLSearchParams(location.search).get("building")||"GTL BUILDING");setFloors()}
+function setBuilding(){options($("building"),ORDER.map(x=>[x,x]),new URLSearchParams(location.search).get("building")||"B2 BUILDING");setFloors()}
 function setFloors(){const b=$("building").value,old=$("floor").value,available=new Set(ROWS.filter(r=>r.building===b).map(r=>floorType(r.floor)));
 options($("floor"),[...available].sort((a,b)=>a==="ground"?-1:1).map(x=>[x,x==="ground"?"Ground Floor":"First / Mezzanine Floor"]),old);selected=null;render()}
 function area(r,k){return Math.max(0,Number(r[k])||0)}
@@ -58,7 +58,7 @@ function renderB2Overlay(all){
  const st=$("status").value,active=st==="all"||area(r,st)>0;
  const rect=document.createElementNS(NS,"rect");for(const [k,v] of Object.entries({x,y,width:w,height:h,rx:0}))rect.setAttribute(k,v);
  rect.setAttribute("fill",active?selectedColor(r):"#e1e7ec");
- rect.setAttribute("fill-opacity",active?".70":".08");
+ rect.setAttribute("fill-opacity",active?".86":".06");
  if(selected===r){rect.setAttribute("stroke","#073b4e");rect.setAttribute("stroke-width","3")}
  rect.addEventListener("click",()=>selectZone(r));const title=document.createElementNS(NS,"title");title.textContent=zone+" — "+fmt(st==="all"?r.total:r[st])+" SQFT";rect.appendChild(title);svg.appendChild(rect);
  }
@@ -83,7 +83,7 @@ function render(){
  const b=$("building").value,f=$("floor").value,s=$("status").value,q=$("search").value.trim().toLowerCase();
  const all=ROWS.filter(r=>r.building===b&&floorType(r.floor)===f);
  current=all.filter(r=>(s==="all"||area(r,s)>0)&&(!q||(r.zone+" "+r.subLocation+" "+r.storeType).toLowerCase().includes(q)));
- $("title").textContent=b+" — "+(f==="ground"?"Ground Floor":"First / Mezzanine Floor");
+ $("title").textContent=b+" — "+(f==="ground"?"Ground Floor":"First / Mezzanine Floor")+(b==="B2 BUILDING"&&f==="ground"?" • INTERACTIVE COLOUR TEST V2":"");
  $("map").src=MAPS[b]?.[f]||"";
  $("count").textContent="ZONE DETAILS ("+current.length+")";
  $("kpis").innerHTML=[["Total","total"],["Rented","rented"],["Utilized","utilized"],["Available","available"],["Non-Selling","nonSelling"]].map(([t,k])=>'<span class="kpi">'+t+': '+fmt(all.reduce((sum,r)=>sum+area(r,k),0))+' SQFT</span>').join("");
