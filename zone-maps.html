@@ -14,9 +14,9 @@
 .side-rail{position:sticky;top:8px;align-self:start;display:flex;flex-direction:column;gap:12px;min-width:0}
 .side-rail .status-row{position:static;display:flex;flex-direction:column;align-items:stretch;gap:7px;margin:0;padding:6px 2px;background:transparent}
 .side-rail .status-row button{width:100%;text-align:left;min-height:39px;font-size:12px;padding:8px 10px}
-.side-kpis{display:flex;flex-direction:column;gap:7px}
-.side-kpi{background:#fff;border:1px solid #d6e2ea;border-left:4px solid var(--kpi-accent);border-radius:9px;padding:9px 10px;display:flex;flex-direction:column;gap:2px;box-shadow:0 2px 8px #0b30450b;min-width:0}
-.side-kpi span{font-size:11px;font-weight:700;color:#527084}.side-kpi strong{font-size:19px;line-height:1.1;color:#103a53;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.side-kpi small{font-size:9px;color:#668399;font-weight:700;letter-spacing:.06em}
+.side-kpis{display:flex;flex-direction:column;gap:4px}
+.side-kpi{background:#fff;border:1px solid #d6e2ea;border-left:3px solid var(--kpi-accent);border-radius:7px;padding:5px 7px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:3px;row-gap:1px;box-shadow:none;min-width:0}
+.side-kpi span{font-size:10px;font-weight:700;color:#527084;grid-column:1/-1}.side-kpi strong{font-size:15px;line-height:1.1;color:#103a53;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.side-kpi small{font-size:8px;color:#668399;font-weight:700;letter-spacing:0}
 #kpis[hidden]{display:none!important}
 @media(max-width:650px){.map-workspace{grid-template-columns:98px minmax(0,1fr);gap:5px}.side-rail{top:4px}.side-rail .status-row button{font-size:10px;padding:6px 4px;min-height:35px}.side-kpi{padding:7px 5px}.side-kpi strong{font-size:14px}.side-kpi span{font-size:9px}}
 </style></head><body><main><div class="heading"><h1>WAREHOUSE ZONE-WISE FLOOR MAPS</h1><small>GTL GLOBAL PARK · INTERACTIVE ZONE MAPS · TEST V15</small></div>
@@ -45,7 +45,7 @@ function moveZoneTooltip(evt){const tip=$("zoneTooltip");const x=evt.clientX,y=e
 function hideZoneTooltip(){$("zoneTooltip").hidden=true}
 function choose(r){selected=r.zone;hideZoneTooltip();render();const panel=$("detailPanel");panel.hidden=false;panel.innerHTML=zoneDetails(r)}
 function render(){renderStatus();const b=$("building").value,f=$("floor").value,t=$("type").value,q=$("search").value.trim().toLowerCase();const all=baseRows(),subset=all.filter(r=>t==="all"||r.storeType===t);visible=subset.filter(r=>(status==="all"||area(r,status)>0)&&(!q||(r.zone+" "+r.subLocation).toLowerCase().includes(q)));
-$("title").textContent=b+" — "+(f==="ground"?"GROUND FLOOR":"FIRST / MEZZANINE FLOOR");const img=$("map");const interactiveOnly=(b==="GREEN BUILDING"||(b==="GTL BUILDING"&&f==="ground"));img.removeAttribute("src");img.hidden=interactiveOnly;img.style.display=interactiveOnly?"none":"block";if(!interactiveOnly)img.src=MAPS[b]?.[f]||"";const box=$("mapbox");box.className="mapbox "+(b==="GREEN BUILDING"?"green":b==="B2 BUILDING"?"b2":b==="INDOLANKA"||b==="US LANKA"?"compact":"wide");
+$("title").textContent=b+" — "+(f==="ground"?"GROUND FLOOR":"FIRST / MEZZANINE FLOOR");const img=$("map");const interactiveOnly=(b==="GREEN BUILDING"||b==="GTL BUILDING");img.removeAttribute("src");img.hidden=interactiveOnly;img.style.display=interactiveOnly?"none":"block";if(!interactiveOnly)img.src=MAPS[b]?.[f]||"";const box=$("mapbox");box.className="mapbox "+(b==="GREEN BUILDING"?"green":b==="B2 BUILDING"?"b2":b==="INDOLANKA"||b==="US LANKA"?"compact":"wide");
 const summaries=[["Total Area","total"],["Rented","rented"],["Utilized","utilized"],["Available","available"],["Non-Selling","nonSelling"]];
 const shown=status==="all"?summaries:summaries.filter(([label,k])=>k===status);
 const side=$("sideKpis");side.innerHTML=shown.map(([label,k])=>'<div class="side-kpi" style="--kpi-accent:'+(COLORS[k]||'#244f68')+'"><span>'+label+'</span><strong data-target="'+subset.reduce((sum,r)=>sum+area(r,k),0)+'">0</strong><small>SQFT</small></div>').join('');
@@ -61,7 +61,7 @@ function renderOverlay(all,subset,q){
  const isGTL=b==="GTL BUILDING"&&GTL_RECTS[f];
  const isGreen=b==="GREEN BUILDING"&&SHAPES[f];
  const isB2=b==="B2 BUILDING"&&f==="ground";
- const standalone=!!((isGTL&&f==="ground")||isGreen);
+ const standalone=!!(isGTL||isGreen);
  svg.dataset.singleMap=standalone?"true":"false";
  svg.hidden=!(standalone||isB2);
  svg.style.display=svg.hidden?"none":"block";
@@ -76,6 +76,7 @@ function renderOverlay(all,subset,q){
  svg.style.height=standalone?"auto":"100%";
  svg.style.aspectRatio=standalone?(isGTL?(f==="ground"?"1200 / 602":"1200 / 613"):"900 / 705"):"auto";
  svg.style.background=standalone?"#f8fafc":"transparent";
+ if(isGTL&&f==="first"){const bg=document.createElementNS(NS,"image");bg.setAttribute("x","0");bg.setAttribute("y","0");bg.setAttribute("width","1200");bg.setAttribute("height","613");bg.setAttribute("preserveAspectRatio","none");bg.setAttribute("href",MAPS[b][f]);bg.style.pointerEvents="none";svg.appendChild(bg)}
  svg.style.borderRadius="8px";
  const lookup=new Map(all.map(r=>[r.zone,r]));
  const eligible=new Set(subset.map(r=>r.zone));
@@ -104,7 +105,7 @@ function renderOverlay(all,subset,q){
        const bx=rectMode?x:0,by=rectMode?y:0,bw=rectMode?w:900,bh=rectMode?h:705;
        fill.setAttribute("x",bx);fill.setAttribute("y",by+bh*offset);fill.setAttribute("width",bw);fill.setAttribute("height",Math.max(0.1,bh*fraction));
        fill.setAttribute("clip-path","url(#"+clipId+")");
-       fill.setAttribute("fill",COLORS[key]);fill.setAttribute("fill-opacity",isGTL&&f==="first"?".88":".93");
+       fill.setAttribute("fill",COLORS[key]);fill.setAttribute("fill-opacity",isGTL&&f==="first"?".82":".93");
        fill.setAttribute("class","zone-fill");
        fill.style.transformBox="fill-box";fill.style.transformOrigin="top";
        fill.style.animationDelay=(Math.min(offset*300,250))+"ms";
@@ -118,7 +119,7 @@ function renderOverlay(all,subset,q){
    
    if(rectMode&&w>0&&h>0&&!(isGTL&&f==="first")){const label=document.createElementNS(NS,"text");label.setAttribute("x",x+w/2);label.setAttribute("y",y+h/2);label.setAttribute("text-anchor","middle");label.setAttribute("dominant-baseline","middle");label.setAttribute("font-size",w<30?"5":w<65?"7":"10");label.setAttribute("font-weight","700");label.setAttribute("fill","#103a56");label.style.pointerEvents="none";label.textContent=zone;svg.appendChild(label)}
  }
- $("mapNote").textContent="Select a status to highlight its proportional area within each zone. Click a zone for details; zero values are hidden. Zone positions are approximate and should be checked against the source floor plan.";
+ $("mapNote").textContent="Select a status to highlight its proportional area within each zone. Click a zone for details; zero values are hidden. Some zone boundaries are approximate; verify alignment against the source plan.";
 }
 function renderZoneSchematic(all,subset,q){
  const target=$("zoneSchematic"),b=$("building").value,f=$("floor").value;
