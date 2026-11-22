@@ -3,8 +3,8 @@
 .map.green-compact{max-width:656px!important}.map.green-compact .zone-label{font-size:12px}.map svg .zone-outline{stroke-width:.65;stroke-opacity:.65}.map svg .fill{mix-blend-mode:normal}@media(max-width:700px){.map.green-compact{max-width:100%!important}}.snow-overlay{pointer-events:none;transition:opacity .25s ease}.single-status .snow-overlay{animation:none!important}@media(prefers-reduced-motion:reduce){.snow-overlay{display:none!important}}
 .map[data-building="US LANKA"],.map[data-building="INDOLANKA"]{max-width:630px!important}
 .map .fill{transform-box:fill-box;transform-origin:center top;animation:none!important;transition:opacity .2s ease}
-.map .fill.zone-reveal{animation:zoneFillDown .85s cubic-bezier(.22,.68,.24,1) both!important}
-@keyframes zoneFillDown{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.map .fill.zone-reveal{animation:none!important} /* Preserve SVG polygon clipping; inset animation previously overrode zone boundaries. */
+@keyframes zoneFillDown{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.map .fill.zone-reveal{animation:none!important}}
 
 /* Keep original printed names dark and readable through zone fills */
@@ -288,7 +288,7 @@ const snowPattern=create('pattern',{id:'cool-snow-'+f,patternUnits:'userSpaceOnU
 [[5,4,1.25],[22,14,1.1],[12,31,0.85],[30,40,0.7]].forEach(([cx,cy,rad])=>snowPattern.appendChild(create('circle',{cx,cy,r:rad,fill:'#ffffff','fill-opacity':'.78'})));
 const snowMotion=create('animateTransform',{attributeName:'patternTransform',type:'translate',from:'0 -45',to:'0 0',dur:'2.7s',repeatCount:'indefinite'});
 snowPattern.appendChild(snowMotion);defs.appendChild(snowPattern);
-const rowByZone=new Map(rows.map(r=>[r.zone,r]));for(const [zone,geo] of Object.entries(mapping.entries)){const r=rowByZone.get(zone)||(b==='US LANKA'?rowByZone.get('US LANKA'):b==='INDOLANKA'?rowByZone.get('INDO LANKA'):null);if(!r)continue;const [x,y,w,h]=bounds(mapping,geo);if(w<=0||h<=0)continue;const clipId='clip-'+f+'-'+zone.replace(/[^a-z0-9]/gi,'');const clip=create('clipPath',{id:clipId});clip.appendChild(makeShape(mapping,geo));defs.appendChild(clip);const group=create('g',{'data-zone':zone});const base=makeShape(mapping,geo);base.setAttribute('fill','transparent');base.setAttribute('fill-opacity','0.14');group.appendChild(base);for(const slice of (b==='INDOLANKA'?[{key:'rented',start:0,portion:1}]:b==='US LANKA'?[{key:'rented',start:0,portion:1}]:statusSlices(r))){if(slice.portion<=0)continue;const target=['MBGF-09','MBGF-10','MBGF-11'].includes(zone)&&b==='GTL BUILDING'&&f==='ground';
+const rowByZone=new Map(rows.map(r=>[r.zone,r]));for(const [zone,geo] of Object.entries(mapping.entries)){const r=rowByZone.get(zone)||(b==='US LANKA'?rowByZone.get('US LANKA'):b==='INDOLANKA'?rowByZone.get('INDO LANKA'):null);if(!r)continue;const [x,y,w,h]=bounds(mapping,geo);if(w<=0||h<=0)continue;const clipId='clip-'+f+'-'+zone.replace(/[^a-z0-9]/gi,'');const clip=create('clipPath',{id:clipId});clip.appendChild(makeShape(mapping,geo));defs.appendChild(clip);const group=create('g',{'data-zone':zone});if(mapping.type==='polygon')group.setAttribute('clip-path','url(#'+clipId+')');const base=makeShape(mapping,geo);base.setAttribute('fill','transparent');base.setAttribute('fill-opacity','0.14');group.appendChild(base);for(const slice of (b==='INDOLANKA'?[{key:'rented',start:0,portion:1}]:b==='US LANKA'?[{key:'rented',start:0,portion:1}]:statusSlices(r))){if(slice.portion<=0)continue;const target=['MBGF-09','MBGF-10','MBGF-11'].includes(zone)&&b==='GTL BUILDING'&&f==='ground';
 const inset=0;
 const sliceY=y+h*slice.start;
 const sliceH=Math.max(0.1,h*slice.portion);
