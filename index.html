@@ -24,10 +24,10 @@
 :root {
   --navy:#073b4e;
   --darkgreen:#006b55;
-  --green:#00a76b;
-  --blue:#087af5;
-  --maroon:#a00d4a;
-  --gold:#ffbc08;
+  --green:#43B78C;
+  --blue:#5599D1;
+  --maroon:#B85679;
+  --gold:#F1C75A;
   --text:#082b49;
   --muted:#5b788e;
   --border:#cce9e0;
@@ -429,7 +429,7 @@ main {
   width:27px;
   height:27px;
   border-radius:50%;
-  background:#087af5;
+  background:#5599D1;
   color:white;
   display:flex;
   align-items:center;
@@ -753,7 +753,7 @@ tbody tr:nth-child(even) {
     gap:20px;
     background:linear-gradient(110deg,#fffdf1,#fff2c5);
     border:1px solid #f1c34c;
-    border-top:4px solid #ffbc08;
+    border-top:4px solid #F1C75A;
   }
 
   .available-kpi .kpi-icon {
@@ -996,7 +996,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
  background:#eaf6ff;color:#07558d;border:1px solid #b8dff7;border-radius:9px;
  padding:9px 14px;font-size:12px;font-weight:800;text-decoration:none;
  box-shadow:0 2px 6px #082b490b;transition:background .2s,border-color .2s}
-#topZoneMapButton:hover,#topZoneMapButton:focus-visible{background:#d5edff;border-color:#087af5}
+#topZoneMapButton:hover,#topZoneMapButton:focus-visible{background:#d5edff;border-color:#5599D1}
 @media(max-width:767px){.zone-map-nav{justify-content:stretch;margin:0 0 10px}
  #topZoneMapButton{width:100%;font-size:11px;padding:11px 9px}}
 /* Embedded Zone Map: third dashboard view, no new browser tab */
@@ -1006,7 +1006,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 .zone-map-section-heading p{font-size:12px;opacity:.7;margin:0}
 #embeddedZoneMap{display:block;width:100%;height:840px;min-height:650px;border:0;border-radius:10px;background:#f5f9fc}
 @media(max-width:767px){.tabs{flex-wrap:wrap}.tabs .tab{flex:1 1 auto}#embeddedZoneMap{height:1450px;min-height:900px;border-radius:9px}}
-.floor-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}.floor-btn{border:1px solid #bfd4e0;background:#fff;color:#24495e;border-radius:8px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer}.floor-btn.active{background:#087af5;color:#fff;border-color:#087af5}.floor-btn:hover{border-color:#087af5}@media(max-width:600px){.floor-btn{flex:1;font-size:10px;padding:11px 8px}}
+.floor-switch{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}.floor-btn{border:1px solid #bfd4e0;background:#fff;color:#24495e;border-radius:8px;padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer}.floor-btn.active{background:#5599D1;color:#fff;border-color:#5599D1}.floor-btn:hover{border-color:#5599D1}@media(max-width:600px){.floor-btn{flex:1;font-size:10px;padding:11px 8px}}
 /* V18: Maintain light dashboard theme regardless of device appearance. */
 :root,html,body{color-scheme:only light}
 
@@ -1124,7 +1124,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="kpi"
-      style="--accent:#a00d4a;--tint:#fce8f0">
+      style="--accent:#B85679;--tint:#fce8f0">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1140,7 +1140,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="kpi"
-      style="--accent:#00a76b;--tint:#e1faed">
+      style="--accent:#43B78C;--tint:#e1faed">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1156,7 +1156,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="kpi"
-      style="--accent:#087af5;--tint:#e4f0ff">
+      style="--accent:#5599D1;--tint:#e4f0ff">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1172,7 +1172,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="kpi available-kpi"
-      style="--accent:#ffbc08;--tint:#fff4d0">
+      style="--accent:#F1C75A;--tint:#fff4d0">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1293,7 +1293,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=test7" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=executive-premium-08" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -1464,7 +1464,7 @@ const WAREHOUSE_ILLUSTRATIONS = {
 
 const KEYS = ["non","rented","used","balance"];
 const LABELS = ["Non-Selling","Rented","Utilized","Available"];
-const COLORS = ["#A84C70","#269B78","#477DA8","#E4B24C"];
+const COLORS = ["#B85679","#43B78C","#5599D1","#F1C75A"];
 
 let rows = [];
 let charts = {};
@@ -1644,10 +1644,10 @@ function renderKPIs(data) {
 
 // Corporate soft-3D finish for the building-wise stacked bars.
 const BUILDING_SOFT_3D = [
-  {light:"#D787A6",base:"#A84C70",dark:"#783650"},
-  {light:"#7BD9B6",base:"#269B78",dark:"#187258"},
-  {light:"#9DC8E8",base:"#477DA8",dark:"#315D83"},
-  {light:"#FFE3A2",base:"#E4B24C",dark:"#B88A34"}
+  {light:"#B85679",base:"#A84A6C",dark:"#923454"},
+  {light:"#43B78C",base:"#35A77B",dark:"#27966C"},
+  {light:"#5599D1",base:"#438BC6",dark:"#327CB9"},
+  {light:"#F1C75A",base:"#E9BA43",dark:"#DDA52B"}
 ];
 const gtlBuildingSoftDepth={
   id:"gtlBuildingSoftDepth",
@@ -1766,10 +1766,10 @@ let selectedOverallAreas = null;
 let overallValues = [0, 0, 0, 0];
 
 const OVERALL_3D_PALETTE = [
-  {top:"#D77D9F",base:"#A84C70",dark:"#702744"},
-  {top:"#70D9B1",base:"#269B78",dark:"#126347"},
-  {top:"#9AC5E9",base:"#477DA8",dark:"#234B72"},
-  {top:"#FFE3A1",base:"#E4B24C",dark:"#9B6A20"}
+  {top:"#B85679",base:"#A84A6C",dark:"#923454"},
+  {top:"#43B78C",base:"#35A77B",dark:"#27966C"},
+  {top:"#5599D1",base:"#438BC6",dark:"#327CB9"},
+  {top:"#F1C75A",base:"#E9BA43",dark:"#DDA52B"}
 ];
 
 function rgbaHex(hex, alpha) {
