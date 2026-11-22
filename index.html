@@ -1217,7 +1217,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 
     <div class="panel">
       <h2>WAREHOUSE FLOOR MAPS</h2>
-      <p class="subtitle">Click the blue arrow to open the relevant building map</p>
+      <p class="subtitle">Click the blue arrow to open the original PDF map layout. Interactive zone maps are available under Zone Map.</p>
       
       <div class="maps" id="maps"></div>
     </div>
@@ -2042,8 +2042,12 @@ function renderMaps() {
     image.alt=name+" Warehouse";
     image.loading="lazy";
 
-    image.src = ({"GTL BUILDING":"gtl-building-ground.png","GREEN BUILDING":"green-building-ground.png","B3 BUILDING":"b3-building-ground.png","B2 BUILDING":"b2-building-ground.png","B1 BUILDING":"b1-building-ground.png","US LANKA":"us-lanka-ground.png","INDOLANKA":"indolanka-ground.png"})[name] || "";
-    image.alt = name + " actual warehouse floor layout";
+    // Corporate warehouse illustration (floor plans remain in Zone Map view).
+    const palette=[['#244e74','#d7edf3'],['#16765e','#def4e8'],['#4e639a','#e3e9fa'],['#376b83','#e2f2f8'],['#80668f','#f1e7f5'],['#287f93','#e0f5f7'],['#365d7a','#e5f3ef']][index] || ['#244e74','#d7edf3'];
+    const label=name.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const art=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 255"><rect width="500" height="255" fill="${palette[1]}"/><path d="M0 85 L250 13 L500 85" fill="${palette[0]}" opacity=".8"/><path d="M0 99 L250 30 L500 99" fill="none" stroke="#fff" stroke-width="5" opacity=".65"/><rect x="0" y="84" width="500" height="49" fill="${palette[0]}"/><text x="250" y="116" fill="white" font-family="Arial,sans-serif" font-size="30" font-weight="bold" text-anchor="middle">${label}</text><rect y="135" width="500" height="115" fill="#d2e5ea" stroke="${palette[0]}" stroke-width="4"/><g fill="#8bb3c6" stroke="${palette[0]}" stroke-width="5"><rect x="20" y="154" width="136" height="90"/><rect x="182" y="154" width="136" height="90"/><rect x="344" y="154" width="136" height="90"/></g><g stroke="#d4e6ed" stroke-width="4"><path d="M22 184 H154 M22 212 H154 M184 184 H316 M184 212 H316 M346 184 H478 M346 212 H478"/></g></svg>`;
+    image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(art);
+    image.alt = name + " warehouse illustration";
 
     const info=document.createElement("div");
     info.className="map-info";
@@ -2057,11 +2061,11 @@ function renderMaps() {
 
       link.className="map-link";
       
-      link.href="./zone-maps.html?building="+encodeURIComponent(name);
+      link.href=(typeof MAP_LINKS!=="undefined" && MAP_LINKS[name]) || ("./zone-maps.html?building="+encodeURIComponent(name));
       link.target="_blank";
       link.rel="noopener noreferrer";
-      link.title="Open "+name+" Warehouse Map";
-      link.textContent="➜";
+      link.title="Open "+name+" original PDF map layout";
+      link.textContent="➜"; link.setAttribute("aria-label", "Open "+name+" map layout PDF");
 
       info.appendChild(link);
     } else {
