@@ -430,7 +430,22 @@ window.addEventListener('message',e=>{
  }
 });
 
-$('building').addEventListener('change',buildingChange);$('floor').addEventListener('change',floorChange);$('type').addEventListener('change',updateStatus);$('search').addEventListener('input',updateStatus);
+$('building').addEventListener('change',buildingChange);$('floor').addEventListener('change',floorChange);$('type').addEventListener('change',function(){
+  // Reuse the exact 0.8s top-to-bottom reveal already used on scroll.
+  updateStatus();
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.floor').forEach(floor=>{
+      const bounds=floor.getBoundingClientRect();
+      const onScreen=bounds.bottom>0&&bounds.top<window.innerHeight;
+      if(!onScreen)return;
+      floor.querySelectorAll('.map svg').forEach(svg=>{
+        if(svg._revealAnimation && typeof svg._revealAnimation.beginElement==='function'){
+          svg._revealAnimation.beginElement();
+        }
+      });
+    });
+  });
+});$('search').addEventListener('input',updateStatus);
 const qs=new URLSearchParams(location.search);options($('building'),[['ALL','All Warehouses'],...ORDER.map(b=>[b,b])],qs.get('building')||ORDER[0]);buildingChange();if(qs.has('floor')&&[...$('floor').options].some(o=>o.value===qs.get('floor'))){$('floor').value=qs.get('floor');floorChange()}if(qs.has('status')&&['all',...KEYS].includes(qs.get('status'))){status=qs.get('status');hideEmptyStatus=qs.get('hideEmpty')==='1';render()}
 
 (function(){
