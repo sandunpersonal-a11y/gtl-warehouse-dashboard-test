@@ -1,1 +1,2 @@
-GTL TEST interactive zone map. Upload ALL files to TEST repository only. zone-map.html links from index.html. Original screenshot is green-building-gf-floor-map.png. Existing dashboard palette: Rented #269B78, Utilized #477DA8, Available #E4B24C, Non-Selling #A84C70. Zone shapes are approximate overlays traced from screenshot; verify. Data is a static Excel snapshot, not API/live. Fully rented zones suppress utilized in dashboard-only calculations. Original WMS data unchanged.
+Upload zone-maps.html to the same GitHub folder, replacing the previous version. No index.html changes required.
+Updated BOND COOL ROOM zones GENERAL BOND CR and FLEMINGO CR-B to Temperature Control. GROUND COOLROOM zones already had Temperature Control.
