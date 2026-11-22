@@ -1019,6 +1019,10 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 #maps .map-info{min-height:49px;gap:9px;padding:10px 12px;align-items:center}
 #maps .map-info strong{font-size:12px;line-height:1.25;overflow-wrap:normal;word-break:normal;white-space:normal;min-width:0}
 #maps .map-link{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;font-size:22px!important;border-radius:50%!important;white-space:nowrap!important;flex-shrink:0}
+
+.map-action-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.map-action-links a{font-size:11px;font-weight:800;color:#11638a;text-decoration:none;border:1px solid #bcd7e5;border-radius:6px;padding:6px 9px;background:#f4fbff}
+.map-action-links a:hover{background:#e3f3fc}
 </style>
 
 <style>
@@ -1909,6 +1913,20 @@ options: {
 
       // Existing doughnut chart selection
       toggleOverallArea(elements[0].index);
+      const mapStatuses=['nonSelling','rented','utilized','available'];
+      const areaStatus=mapStatuses[elements[0].index];
+      if(areaStatus){
+        const buildingFilter=document.getElementById('buildingFilter');
+        if(buildingFilter)buildingFilter.value='ALL';
+        const masterStatus=document.getElementById('masterStatus');
+        if(masterStatus)masterStatus.value=({nonSelling:'non',rented:'rented',utilized:'used',available:'balance'})[areaStatus];
+        const masterFloor=document.getElementById('masterFloor');
+        if(masterFloor)masterFloor.value='ALL';
+        switchPage('zoneMap');
+        const frame=document.getElementById('embeddedZoneMap');
+        if(frame){frame.src='./zone-maps.html?building=ALL&floor=both&status='+encodeURIComponent(areaStatus)+'&v=20261122';}
+        document.getElementById('zoneMapPage')?.scrollIntoView({behavior:'smooth',block:'start'});
+      }
     }
   },
 
@@ -2056,26 +2074,12 @@ function renderMaps() {
     title.textContent=name;
     info.appendChild(title);
 
-    if(true) {
-      const link=document.createElement("a");
-
-      link.className="map-link";
-      
-      link.href=(typeof MAP_LINKS!=="undefined" && MAP_LINKS[name]) || ("./zone-maps.html?building="+encodeURIComponent(name));
-      link.target="_blank";
-      link.rel="noopener noreferrer";
-      link.title="Open "+name+" original PDF map layout";
-      link.textContent="➜"; link.setAttribute("aria-label", "Open "+name+" map layout PDF");
-
-      info.appendChild(link);
-    } else {
-      const pending=document.createElement("span");
-
-      pending.className="pending";
-      pending.textContent="PENDING";
-
-      if(name !== "GREEN BUILDING") info.appendChild(pending);
-    }
+    const links=document.createElement('div');
+    links.className='map-action-links';
+    const pdf=(typeof MAP_LINKS!=='undefined'&&MAP_LINKS[name])||'';
+    if(pdf){const a=document.createElement('a');a.href=pdf;a.target='_blank';a.rel='noopener noreferrer';a.textContent='MAP LAYOUT';a.title='Open original PDF floor layout';links.appendChild(a);}
+    const zone=document.createElement('a');zone.href='./zone-maps.html?building='+encodeURIComponent(name);zone.textContent='ZONE MAP';zone.target='_blank';zone.rel='noopener noreferrer';links.appendChild(zone);
+    info.appendChild(links);
 
     card.appendChild(image);
     card.appendChild(info);
@@ -2336,7 +2340,7 @@ function selectZoneFloor(){switchPage('zoneMap');}
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||!event.data||event.data.type!=='gtl-zone-height')return;
  const frame=document.getElementById('embeddedZoneMap');
- if(frame&&event.source===frame.contentWindow)frame.style.height=Math.max(560,Math.min(2600,Number(event.data.height)+8))+'px';
+ if(frame&&event.source===frame.contentWindow)frame.style.height=Math.max(560,Math.min(18000,Number(event.data.height)+24))+'px';
 });
 document.addEventListener('DOMContentLoaded',()=>{
  const frame=document.getElementById('embeddedZoneMap');
@@ -2535,8 +2539,8 @@ function gtlSyncMap(){
  const frame=document.getElementById("embeddedZoneMap");
  if(frame?.contentWindow)frame.contentWindow.postMessage({
   type:"gtl-master-filters",building:document.getElementById("buildingFilter").value,
-  floor:document.getElementById("masterFloor").value,
-  status:document.getElementById("masterStatus").value
+  floor:({ALL:"both",ground:"ground",first:"first"})[document.getElementById("masterFloor").value]||"both",
+  status:({non:"nonSelling",rented:"rented",used:"utilized",balance:"available",ALL:"all"})[document.getElementById("masterStatus").value]||"all"
  },location.origin);
 }
 function updateZoneMapBuilding(){gtlSyncMap();}
