@@ -1783,21 +1783,12 @@ function overallActive(index) {
 }
 
 function openOverallZoneMap(index) {
-  const statuses = ['nonSelling', 'rented', 'utilized', 'available'];
-  const chosen = statuses[index];
-  if (!chosen) return;
-  selectedOverallAreas = new Set([index]);
-  updateOverallSelection();
-  const buildingFilter = document.getElementById('buildingFilter');
-  if (buildingFilter) buildingFilter.value = 'ALL';
-  const masterFloor = document.getElementById('masterFloor');
-  if (masterFloor) masterFloor.value = 'ALL';
-  const masterStatus = document.getElementById('masterStatus');
-  if (masterStatus) masterStatus.value = ({nonSelling:'non',rented:'rented',utilized:'used',available:'balance'})[chosen];
-  switchPage('zoneMap');
-  const frame = document.getElementById('embeddedZoneMap');
-  if (frame) frame.src = './zone-maps.html?building=ALL&floor=both&status=' + encodeURIComponent(chosen) + '&v=20261122';
-  document.getElementById('zoneMapPage')?.scrollIntoView({behavior:'smooth',block:'start'});
+  // Selection only. Navigation is performed explicitly through the Zone Map tab.
+  toggleOverallArea(index);
+}
+function selectedOverallStatus(){
+  if(!selectedOverallAreas || selectedOverallAreas.size !== 1) return 'all';
+  return ['nonSelling','rented','utilized','available'][[...selectedOverallAreas][0]];
 }
 
 function toggleOverallArea(index) {
@@ -1886,7 +1877,7 @@ function updateOverallSelection() {
     const active = overallActive(i);
     const percent = total > 0 ? (overallValues[i] / total * 100).toFixed(1) : "0.0";
     return `<button type="button" class="overall-legend-button ${active ? 'is-selected' : 'is-muted'}"
-      onclick="openOverallZoneMap(${i})" aria-pressed="${selectedOverallAreas !== null && selectedOverallAreas.has(i)}" title="Highlight ${label}">
+      onclick="toggleOverallArea(${i})" aria-pressed="${selectedOverallAreas !== null && selectedOverallAreas.has(i)}" title="Highlight ${label}">
       <span class="legend-name"><span class="swatch" style="background:${COLORS[i]}"></span>${label}</span>
       <strong>${percent}%</strong>
     </button>`;
@@ -1937,7 +1928,7 @@ options: {
   transitions: { active: { animation: { duration: 0 } } },
 
   onClick: (event, elements) => {
-    if (elements && elements.length) openOverallZoneMap(elements[0].index);
+    if (elements && elements.length) toggleOverallArea(elements[0].index);
   },
 
   onHover: (event, elements, chart) => {
@@ -2372,7 +2363,19 @@ function switchPage(page) {
     "hidden",page!=="availability"
   );
   $("zoneMapPage").classList.toggle("hidden",page!=="zoneMap");
-  if(page==="zoneMap"){updateZoneMapBuilding();const f=$("embeddedZoneMap");if(f&&f.contentWindow)f.contentWindow.postMessage({type:"gtl-replay"},location.origin);}
+  if(page==="zoneMap"){
+    const chosen=selectedOverallStatus();
+    if(chosen!=='all'){
+      const ms=document.getElementById('masterStatus');
+      if(ms) ms.value=({nonSelling:'non',rented:'rented',utilized:'used',available:'balance'})[chosen];
+    }
+    updateZoneMapBuilding();
+    const f=$("embeddedZoneMap");
+    if(f&&f.contentWindow){
+      f.contentWindow.postMessage({type:"gtl-replay"},location.origin);
+      if(chosen!=='all')f.contentWindow.postMessage({type:'gtl-master-filters',building:'ALL',floor:'both',status:chosen,hideEmpty:true},location.origin);
+    }
+  }
 
   $("overviewTab").classList.toggle(
     "active",page==="overview"
@@ -2648,6 +2651,11 @@ loadData();
 .gtl-credit-footer .footer-title {color:#073b4e;font-weight:700;}
 .gtl-credit-footer .developer-name {font-weight:400 !important;color:#5b788e;}
 @media(max-width:767px){.gtl-credit-footer{font-size:10px;padding:15px 10px 20px;}}
+/* Responsive overall chart: selectable arcs without redirecting */
+#overallChart{max-width:100%;touch-action:manipulation}
+#overallLegend .overall-legend-button{min-height:38px}
+@media(min-width:1200px){.donut-layout{max-width:100%}}
+@media(max-width:767px){#overallLegend .overall-legend-button{min-height:44px;font-size:12px}}
 </style>
 <footer class="gtl-credit-footer">
   <div class="footer-title">GTL WAREHOUSE AREA UTILIZATION DASHBOARD</div>
