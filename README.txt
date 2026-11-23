@@ -1,1 +1,1 @@
-Office Area (19 zones): fixed purple #9570C7. Common Dock (5 zones): fixed grey #9BA5B1. Based on Zone Details (1).xlsx. Replace zone-maps.html on GitHub. Existing status filters and temperature controlled snow preserved.
+Replace only zone-maps.html in GitHub. Office Area: #69409E; Common Dock: #596572. Fixed zones render immediately without reveal animation and remain visible across status/storage filters. Other zone palette and animation unchanged.
