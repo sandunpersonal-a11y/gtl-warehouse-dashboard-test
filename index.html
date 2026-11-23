@@ -2575,7 +2575,7 @@ function gtlReceiveZoneRows(data,live=false){
   subLocation:String(r.subLocation||"").trim(),
   storeType:String(r.storeType||"").trim(),
   total:Number(r.total)||0,non:Number(r.non)||0,rented:Number(r.rented)||0,
-  used:Number(r.used)||0,balance:Math.max(0,Number(r.balance)||0),
+  used:Number(r.used)||0,balance:Number(r.balance)||0,
   cbm:Number(r.cbm)||0
  })).filter(r=>r.building&&r.floor);
  rows=gtlZoneSummary(gtlZoneRecords);
