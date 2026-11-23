@@ -1,2 +1,1 @@
-Upload zone-maps.html to the same GitHub folder, replacing the previous version. No index.html changes required.
-Updated BOND COOL ROOM zones GENERAL BOND CR and FLEMINGO CR-B to Temperature Control. GROUND COOLROOM zones already had Temperature Control.
+Office Area (19 zones): fixed purple #9570C7. Common Dock (5 zones): fixed grey #9BA5B1. Based on Zone Details (1).xlsx. Replace zone-maps.html on GitHub. Existing status filters and temperature controlled snow preserved.
