@@ -1,1 +1,6 @@
-Upload index.html, zone-maps.html, and zone-data.json together to your existing GitHub dashboard root. Existing map PNGs and other assets must remain on GitHub. Data source: Zone Details (1).xlsx. Rows with identical building + floor + zone have all SQFT figures added. No live Google Sheets sync is configured; to update again, regenerate zone-data.json from a new Excel export.
+GTL Zone Maps filter update
+- Tooltip hides all zero-value status rows.
+- When Rented/Utilized/Available/Non-Selling is selected, zones without positive area in that category are hidden (except Office Area and Common Dock fixed-colour zones, as previously requested).
+- Only selected status colour is displayed for regular zones.
+- Office Area and Common Dock fixed colours remain unchanged, as do all other map styles and data.
+Upload index.html, zone-maps.html and zone-data.json together to your existing GitHub Pages repository.
