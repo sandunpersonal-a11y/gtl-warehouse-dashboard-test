@@ -354,13 +354,13 @@ const zoneFillColors={nonSelling:'#B85779',rented:'#43B78C',available:'#DDAE39'}
 // Recolour the printed plan only under Utilized slices. Bright paper becomes KPI
 // blue, while dark ink retains the original names in their original positions.
 const utilizedId=maskId+'-utilized';
+const utilizedDefs=create('defs');
 const utilizedMask=create('mask',{id:utilizedId,maskUnits:'userSpaceOnUse',x:vb[0],y:vb[1],width:vb[2],height:vb[3]});
 const utilizedFilter=create('filter',{id:utilizedId+'-ink','color-interpolation-filters':'sRGB'});
 const ink='0.4252 1.4304 0.1444 0 0';
 utilizedFilter.appendChild(create('feColorMatrix',{type:'matrix',values:[ink,ink,ink,'0 0 0 1 0'].join(' ')}));
 utilizedFilter.appendChild(create('feColorMatrix',{type:'matrix',values:'0.333333 0 0 0 0  0 0.6 0 0 0  0 0 0.819608 0 0  0 0 0 1 0'}));
-defs.appendChild(utilizedMask);
-defs.appendChild(utilizedFilter);
+
 // Subtle snowfall: rendered only inside highlighted Temperature Control zone slices.
 const snowId='cool-snow-'+b.replace(/[^a-z]/gi,'')+'-'+f;
 const snowPattern=create('pattern',{id:snowId,patternUnits:'userSpaceOnUse',width:34,height:44});
@@ -381,13 +381,16 @@ const rowByZone=new Map(rows.map(r=>[r.zone,r]));for(const [zone,geo] of Object.
 const inset=0;
 const sliceY=y+h*slice.start;
 const sliceH=Math.max(0.1,h*slice.portion);
-const rectAttrs={x:x+inset,y:sliceY,width:Math.max(0.1,w),height:Math.max(0.1,sliceH),fill:slice.key==='utilized'?'#fff':zoneFillColors[slice.key],'clip-path':'url(#'+clipId+')',class:'fill','data-kind':slice.key};
+const rectAttrs={x:x+inset,y:sliceY,width:Math.max(0.1,w),height:Math.max(0.1,sliceH),fill:slice.key==='utilized'?'transparent':zoneFillColors[slice.key],'clip-path':'url(#'+clipId+')',class:'fill','data-kind':slice.key};
 if(fixedZoneColor(r)){rectAttrs.fill=fixedZoneColor(r);rectAttrs['data-kind']='fixed';}
 const rect=create('rect',rectAttrs);if(!fixedZoneColor(r))rect.setAttribute('mask','url(#'+maskId+')');rect.style.mixBlendMode='normal';rect.style.opacity=fixedZoneColor(r)?'0.90':'0.59';group.appendChild(rect);
 if(rectAttrs['data-kind']==='utilized'){
- const id=utilizedId+'-'+utilizedMask.childElementCount;
- rect.setAttribute('id',id);
- utilizedMask.appendChild(create('use',{href:'#'+id}));
+ const shape=create('rect',{x:rectAttrs.x,y:rectAttrs.y,width:rectAttrs.width,height:rectAttrs.height,fill:'#fff','clip-path':'url(#'+clipId+'-utilized)'});
+ const outline=clip.cloneNode(true);
+ outline.id=clipId+'-utilized';
+ utilizedDefs.appendChild(outline);
+ utilizedMask.appendChild(shape);
+ rect._utilizedShape=shape;
 }
 if(!fixedZoneColor(r)&&isTemperatureControlled(r,zone)){
  const snow=create('rect',{...rectAttrs,fill:'url(#'+snowId+')',class:'snow-overlay','data-kind':slice.key});
@@ -407,9 +410,18 @@ if(b==='GTL BUILDING' && f==='ground' && zone==='MBMF-02')group.appendChild(labe
 svg.appendChild(group);group._r=r}
 if(utilizedMask.childElementCount){
   const utilizedLayer=create('svg',{viewBox:mapping.view,preserveAspectRatio:'none',class:'zone-utilized-layer','aria-hidden':'true'});
-  const utilizedImage=create('image',{href:MAPS[b][f],x:vb[0],y:vb[1],width:vb[2],height:vb[3],preserveAspectRatio:'none',
-    filter:'url(#'+utilizedId+'-ink)',mask:'url(#'+utilizedId+')'});
-  utilizedLayer.appendChild(utilizedImage);
+  const utilizedReveal=revealMask.cloneNode(true);
+  utilizedReveal.id=utilizedId+'-reveal';
+  utilizedLayer._revealAnimation=svg._revealAnimation?utilizedReveal.querySelector('animate'):null;
+  utilizedDefs.append(utilizedMask,utilizedFilter,utilizedReveal);
+  utilizedLayer.appendChild(utilizedDefs);
+  const animated=create('g',{mask:'url(#'+utilizedId+'-reveal)'});
+  const paint=create('g',{mask:'url(#'+utilizedId+')'});
+  paint.appendChild(create('rect',{x:vb[0],y:vb[1],width:vb[2],height:vb[3],fill:'#5599D1'}));
+  paint.appendChild(create('image',{href:MAPS[b][f],x:vb[0],y:vb[1],width:vb[2],height:vb[3],preserveAspectRatio:'none',
+    filter:'url(#'+utilizedId+'-ink)'}));
+  animated.appendChild(paint);
+  utilizedLayer.appendChild(animated);
   box.appendChild(utilizedLayer);
 }
 box.appendChild(svg);
@@ -421,7 +433,7 @@ if(b==='GTL BUILDING'&&f==='ground'){
   box.appendChild(correction);
 }
 floor.appendChild(box);floor._svg=svg}
-function updateStatus(){statusButtons();const all=filteredRows();updateKpis(all);document.querySelectorAll('.floor').forEach(floor=>{floor.classList.toggle('single-status',false);floor.querySelectorAll('g[data-zone]').forEach(g=>{const r=g._r,ok=visibleRow(r);const fixed=Boolean(fixedZoneColor(r));const hasSelectedArea=status==='all'||amount(r,status)>0;const temperatureOnly=$('type').value==='Temperature Control';g.style.visibility=((!temperatureOnly&&fixed)||(ok&&hasSelectedArea))?'visible':'hidden';g.querySelectorAll('.fill').forEach(rect=>{const k=rect.dataset.kind;const dominant=KEYS.reduce((best,key)=>amount(r,key)>amount(r,best)?key:best,KEYS[0]);const show=fixed||ok&&(status==='all'?true:status===k);rect.style.opacity=show?(fixed?'.90':k==='utilized'?'1':'.65'):'0';rect.classList.remove('zone-reveal');if(rect.style.opacity!=='0'&&floor.dataset.visible==='yes')requestAnimationFrame(()=>rect.classList.add('zone-reveal'));});g.querySelectorAll('.snow-overlay').forEach(el=>{el.style.opacity=ok&&(status==='all'||status===el.dataset.kind)?($('type').value==='Temperature Control'?'.52':'.38'):'0'});g.style.opacity='1'});floor.querySelectorAll('.zone-tile').forEach(t=>{paintTile(t,t._r);t.hidden=!(($('type').value!=='Temperature Control'&&fixedZoneColor(t._r))||(visibleRow(t._r)&&(status==='all'||amount(t._r,status)>0)));});const detail=floor.querySelector('.detail');if(detail)detail.hidden=true})}
+function updateStatus(){statusButtons();const all=filteredRows();updateKpis(all);document.querySelectorAll('.floor').forEach(floor=>{floor.classList.toggle('single-status',false);floor.querySelectorAll('g[data-zone]').forEach(g=>{const r=g._r,ok=visibleRow(r);const fixed=Boolean(fixedZoneColor(r));const hasSelectedArea=status==='all'||amount(r,status)>0;const temperatureOnly=$('type').value==='Temperature Control';g.style.visibility=((!temperatureOnly&&fixed)||(ok&&hasSelectedArea))?'visible':'hidden';g.querySelectorAll('.fill').forEach(rect=>{const k=rect.dataset.kind;const dominant=KEYS.reduce((best,key)=>amount(r,key)>amount(r,best)?key:best,KEYS[0]);const show=fixed||ok&&(status==='all'?true:status===k);rect.style.opacity=show?(fixed?'.90':'.65'):'0';if(rect._utilizedShape)rect._utilizedShape.style.display=ok&&hasSelectedArea&&show?'':'none';rect.classList.remove('zone-reveal');if(rect.style.opacity!=='0'&&floor.dataset.visible==='yes')requestAnimationFrame(()=>rect.classList.add('zone-reveal'));});g.querySelectorAll('.snow-overlay').forEach(el=>{el.style.opacity=ok&&(status==='all'||status===el.dataset.kind)?($('type').value==='Temperature Control'?'.52':'.38'):'0'});g.style.opacity='1'});floor.querySelectorAll('.zone-tile').forEach(t=>{paintTile(t,t._r);t.hidden=!(($('type').value!=='Temperature Control'&&fixedZoneColor(t._r))||(visibleRow(t._r)&&(status==='all'||amount(t._r,status)>0)));});const detail=floor.querySelector('.detail');if(detail)detail.hidden=true})}
 function render(){hideTip();selected=null;statusButtons();const b=$('building').value,f=$('floor').value;const all=filteredRows();const floors=f==='both'?['ground','first']:[f];const stage=$('stage');stage.replaceChildren();for(const currentBuilding of (b==='ALL'?ORDER:[b]))for(const fl of floors){if(!MAPS[currentBuilding]?.[fl])continue;const floor=document.createElement('article');floor.className='floor';floor.dataset.floor=fl;floor.dataset.building=currentBuilding;floor.dataset.building=currentBuilding;floor.innerHTML='<h2>'+safe(currentBuilding)+' — '+(fl==='ground'?'GROUND FLOOR':'FIRST / MEZZANINE FLOOR')+'</h2>';const rr=all.filter(r=>r.building===currentBuilding&&floorOf(r.floor)===fl);
 if($('type').value==='Temperature Control'&&!rr.some(r=>visibleRow(r)&&(status==='all'||amount(r,status)>0)))continue;
 if(status!=='all' && !rr.some(r=>($('type').value!=='Temperature Control'&&fixedZoneColor(r))||visibleRow(r)&&amount(r,status)>0))continue;
