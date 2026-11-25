@@ -210,7 +210,11 @@ main {
 }
 
 .kpi label {
-  display:block;
+  display:inline-block;
+  padding:1px 4px;
+  border-radius:3px;
+  background:var(--accent);
+  color:var(--heading-ink,#07141f);
   font-size:11px;
   font-weight:800;
 }
@@ -379,6 +383,7 @@ main {
 
 .fill {
   height:100%;
+  background:var(--gold);
   border-radius:20px;
   transition:width .6s ease;
 }
@@ -753,7 +758,7 @@ tbody tr:nth-child(even) {
     gap:20px;
     background:linear-gradient(110deg,#fffdf1,#fff2c5);
     border:1px solid #f1c34c;
-    border-top:4px solid #F1C75A;
+    border-top:4px solid var(--accent);
   }
 
   .available-kpi .kpi-icon {
@@ -1108,7 +1113,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   <div class="kpis">
 
     <div class="kpi"
-      style="--accent:#466a83;--tint:#e8f1f8">
+      style="--accent:#466a83;--tint:#e8f1f8;--heading-ink:#fff">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1124,7 +1129,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     </div>
 
     <div class="kpi"
-      style="--accent:#B85679;--tint:#fce8f0">
+      style="--accent:#B85679;--tint:#fce8f0;--heading-ink:#fff">
 
       <div class="kpi-icon">
         <svg viewBox="0 0 48 48">
@@ -1962,13 +1967,11 @@ function floorHTML(data,building) {
   const floors=[
     {
       type:"ground",
-      label:"Ground Floor",
-      color:"#269B78"
+      label:"Ground Floor"
     },
     {
       type:"first",
-      label:"First Floor",
-      color:"#477DA8"
+      label:"First Floor"
     }
   ];
 
@@ -2000,7 +2003,6 @@ function floorHTML(data,building) {
           <div class="fill"
             style="
               width:${Math.max(0,Math.min(100,percentage))}%;
-              background:${f.color};
             ">
           </div>
         </div>
