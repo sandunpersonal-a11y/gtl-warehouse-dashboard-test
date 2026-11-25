@@ -1320,7 +1320,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=direct-utilized-fill-12" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=kpi-zero-minimum-13" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -1650,7 +1650,7 @@ function destroyCharts() {
 let overviewKpiAnimationFrame=0;
 function renderKPIs(data) {
   const fields=[["kTotal","total"],["kNon","non"],["kRented","rented"],["kUsed","used"],["kBalance","balance"]];
-  const values=fields.map(([id,key])=>({node:$(id),target:Number(sum(data,key))||0}));
+  const values=fields.map(([id,key])=>({node:$(id),target:Math.max(0,sum(data,key))}));
   cancelAnimationFrame(overviewKpiAnimationFrame);
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     values.forEach(({node,target})=>node.textContent=fmt(target));return;
@@ -2203,8 +2203,8 @@ function renderFloorSummary(data) {
       r => floorType(r.floor) === f.type
     );
 
-    const available = sum(d, "balance");
-    const total = sum(d, "total");
+    const available = Math.max(0,sum(d, "balance"));
+    const total = Math.max(0,sum(d, "total"));
 
     const metrics = [
       ["AVAILABLE SQ. FT.", fmt(available)],
@@ -2260,7 +2260,7 @@ function renderFloorSummary(data) {
 ======================================== */
 
 function renderAvailability(data) {
-  $("availableTotal").textContent=fmt(sum(data,"balance"));
+  $("availableTotal").textContent=fmt(Math.max(0,sum(data,"balance")));
 
   renderFloorSummary(data);
 
