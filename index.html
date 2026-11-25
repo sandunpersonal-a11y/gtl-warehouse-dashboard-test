@@ -27,7 +27,7 @@
   --green:#43B78C;
   --blue:#5599D1;
   --maroon:#B85679;
-  --gold:#F1C75A;
+  --gold:#DDAE39;
   --text:#082b49;
   --muted:#5b788e;
   --border:#cce9e0;
@@ -181,15 +181,22 @@ main {
 .kpi {
   min-width:0;
   min-height:105px;
-  padding:13px;
   display:flex;
-  align-items:center;
-  gap:12px;
+  flex-direction:column;
+  overflow:hidden;
   background:linear-gradient(140deg,#ffffff,var(--tint));
   border:1px solid #d4e6e3;
   border-top:4px solid var(--accent);
   border-radius:13px;
   box-shadow:0 4px 12px #0c6b5020;
+}
+
+.kpi-body {
+  display:flex;
+  flex:1;
+  align-items:center;
+  gap:12px;
+  padding:8px 13px;
 }
 
 .kpi-icon {
@@ -209,10 +216,13 @@ main {
   stroke-linejoin:round;
 }
 
+.available-kpi .kpi-icon {
+  color:#F1C75A;
+}
+
 .kpi label {
-  display:inline-block;
-  padding:1px 4px;
-  border-radius:3px;
+  display:block;
+  padding:4px 8px;
   background:var(--accent);
   color:var(--heading-ink,#07141f);
   font-size:11px;
@@ -630,9 +640,9 @@ tbody tr:nth-child(even) {
   .bottom-grid {
     grid-template-columns:1fr;
   }
-  .kpi {
+  .kpi-body {
     gap:7px;
-    padding:10px;
+    padding:6px 10px;
   }
   .kpi-icon {
     width:34px;
@@ -726,7 +736,10 @@ tbody tr:nth-child(even) {
     width:100%;
     min-width:0;
     min-height:93px;
-    padding:10px;
+  }
+
+  .kpi-body {
+    padding:6px 10px;
     gap:8px;
   }
 
@@ -754,8 +767,6 @@ tbody tr:nth-child(even) {
   .kpi.available-kpi {
     grid-column:1/-1;
     min-height:92px;
-    justify-content:center;
-    gap:20px;
     background:linear-gradient(110deg,#fffdf1,#fff2c5);
     border:1px solid #f1c34c;
     border-top:4px solid var(--accent);
@@ -916,7 +927,6 @@ tbody tr:nth-child(even) {
 .available-kpi .kpi-icon {width:34px !important;height:34px !important;}
 .available-kpi label {font-size:9px !important;}
 .available-kpi strong {font-size:clamp(16px,4.3vw,21px) !important;}
-.kpi.available-kpi {gap:8px !important;justify-content:flex-start !important;}
 }
 html,body {background:#fff !important;background-image:none !important;background-attachment:scroll !important;}
 /* SUBTLE 3D DEPTH, WITHOUT DISTRACTING FROM DATA */
@@ -962,7 +972,8 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   .tabs{margin-bottom:10px}
   .tab{padding:9px 18px}
   .kpis{gap:10px;margin-bottom:10px}
-  .kpi{min-height:79px;padding:9px 11px;gap:9px}
+  .kpi{min-height:79px}
+  .kpi-body{padding:5px 11px;gap:9px}
   .kpi-icon{width:35px;height:35px}
   .kpi label{font-size:10px}
   .kpi strong{font-size:clamp(17px,1.65vw,24px);margin:3px 0}
@@ -986,7 +997,8 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   .header{padding:10px}
   .brand h1{font-size:16px}
   .logo{width:48px;height:48px}
-  .kpi{min-height:80px;padding:9px}
+  .kpi{min-height:80px}
+  .kpi-body{padding:5px 9px}
   .kpi-icon{width:29px;height:29px}
   .kpi strong{font-size:clamp(15px,4vw,19px)}
   .kpi.available-kpi{min-height:80px}
@@ -1115,80 +1127,90 @@ html,body {background:#fff !important;background-image:none !important;backgroun
     <div class="kpi"
       style="--accent:#466a83;--tint:#e8f1f8;--heading-ink:#fff">
 
-      <div class="kpi-icon">
-        <svg viewBox="0 0 48 48">
-          <path d="M5 43V18L24 6l19 12v25M12 43V22h24v21M19 43V30h10v13M5 18h38M17 22v-7h14v7"/>
-        </svg>
-      </div>
+      <label>TOTAL AREA</label>
+      <div class="kpi-body">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 48 48">
+            <path d="M5 43V18L24 6l19 12v25M12 43V22h24v21M19 43V30h10v13M5 18h38M17 22v-7h14v7"/>
+          </svg>
+        </div>
 
-      <div>
-        <label>TOTAL AREA</label>
-        <strong id="kTotal">0</strong>
-        <small>SQ. FT.</small>
+        <div>
+          <strong id="kTotal">0</strong>
+          <small>SQ. FT.</small>
+        </div>
       </div>
     </div>
 
     <div class="kpi"
       style="--accent:#B85679;--tint:#fce8f0;--heading-ink:#fff">
 
-      <div class="kpi-icon">
-        <svg viewBox="0 0 48 48">
-          <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
-        </svg>
-      </div>
+      <label>NON-SELLING AREA</label>
+      <div class="kpi-body">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 48 48">
+            <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
+          </svg>
+        </div>
 
-      <div>
-        <label>NON-SELLING AREA</label>
-        <strong id="kNon">0</strong>
-        <small>SQ. FT.</small>
+        <div>
+          <strong id="kNon">0</strong>
+          <small>SQ. FT.</small>
+        </div>
       </div>
     </div>
 
     <div class="kpi"
       style="--accent:#43B78C;--tint:#e1faed">
 
-      <div class="kpi-icon">
-        <svg viewBox="0 0 48 48">
-          <path d="M4 14 13 9l8 6-9 15-8-5V14ZM44 14l-9-5-8 6 9 15 8-5V14ZM17 19l8-5 7 5-5 4-5-2M12 30l12 12 4-3M17 34l8 8M24 21l12 11-3 4-4-2M33 36l-4 4-5-3"/>
-        </svg>
-      </div>
+      <label>RENTED AREA</label>
+      <div class="kpi-body">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 48 48">
+            <path d="M4 14 13 9l8 6-9 15-8-5V14ZM44 14l-9-5-8 6 9 15 8-5V14ZM17 19l8-5 7 5-5 4-5-2M12 30l12 12 4-3M17 34l8 8M24 21l12 11-3 4-4-2M33 36l-4 4-5-3"/>
+          </svg>
+        </div>
 
-      <div>
-        <label>RENTED AREA</label>
-        <strong id="kRented">0</strong>
-        <small>SQ. FT.</small>
+        <div>
+          <strong id="kRented">0</strong>
+          <small>SQ. FT.</small>
+        </div>
       </div>
     </div>
 
     <div class="kpi"
       style="--accent:#5599D1;--tint:#e4f0ff">
 
-      <div class="kpi-icon">
-        <svg viewBox="0 0 48 48">
-          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21M14 8l20 12"/>
-        </svg>
-      </div>
+      <label>UTILIZED AREA</label>
+      <div class="kpi-body">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 48 48">
+            <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21M14 8l20 12"/>
+          </svg>
+        </div>
 
-      <div>
-        <label>UTILIZED AREA</label>
-        <strong id="kUsed">0</strong>
-        <small>SQ. FT.</small>
+        <div>
+          <strong id="kUsed">0</strong>
+          <small>SQ. FT.</small>
+        </div>
       </div>
     </div>
 
     <div class="kpi available-kpi"
-      style="--accent:#F1C75A;--tint:#fff4d0">
+      style="--accent:var(--gold);--tint:#fff4d0">
 
-      <div class="kpi-icon">
-        <svg viewBox="0 0 48 48">
-          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21"/>
-        </svg>
-      </div>
+      <label>AVAILABLE AREA</label>
+      <div class="kpi-body">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 48 48">
+            <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21"/>
+          </svg>
+        </div>
 
-      <div>
-        <label>AVAILABLE AREA</label>
-        <strong id="kBalance">0</strong>
-        <small>SQ. FT.</small>
+        <div>
+          <strong id="kBalance">0</strong>
+          <small>SQ. FT.</small>
+        </div>
       </div>
     </div>
 
