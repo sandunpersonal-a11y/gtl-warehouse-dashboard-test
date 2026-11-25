@@ -1320,7 +1320,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=utilized-fill-fixed-11" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=direct-utilized-fill-12" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -2005,7 +2005,7 @@ function floorHTML(data,building) {
 
     if(!d.length) return "";
 
-    const available=sum(d,"balance");
+    const available=Math.max(0,sum(d,"balance"));
     const total=sum(d,"total");
     const percentage=pct(available,total);
 
