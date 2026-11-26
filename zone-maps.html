@@ -397,7 +397,13 @@ const displayName=zone;
 const label=create('text',{x:x+w/2,y:y+h/2,'text-anchor':'middle','dominant-baseline':'middle',class:'zone-label','pointer-events':'none'});
 const isDense=(b==='B3 BUILDING'||b==='B2 BUILDING');
 const baseSize=Math.min(isDense?10:12, w/Math.max(1,displayName.length*.62), h*.65);
-label.setAttribute('font-size',baseSize.toFixed(2));
+label.style.setProperty('font-size',baseSize.toFixed(2)+'px','important');
+label.style.setProperty('stroke','none','important');
+label.style.setProperty('font-weight','700','important');
+// Fit the complete name inside its own zone, independent of stylesheet font sizes.
+const maxLabelWidth=w*.82;
+label.setAttribute('textLength',Math.min(maxLabelWidth,baseSize*displayName.length*.60).toFixed(2));
+label.setAttribute('lengthAdjust','spacingAndGlyphs');
 label.setAttribute('font-weight','700');
 label.setAttribute('fill','#000000');
 label.textContent=displayName;
