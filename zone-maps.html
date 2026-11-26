@@ -396,17 +396,35 @@ if(!fixedZoneColor(r)&&isTemperatureControlled(r,zone)){
 const displayName=zone;
 const label=create('text',{x:x+w/2,y:y+h/2,'text-anchor':'middle','dominant-baseline':'middle',class:'zone-label','pointer-events':'none'});
 const isDense=(b==='B3 BUILDING'||b==='B2 BUILDING');
-const baseSize=Math.min(isDense?10:12, w/Math.max(1,displayName.length*.62), h*.65);
-label.style.setProperty('font-size',baseSize.toFixed(2)+'px','important');
+const maxLabelWidth=w*.82, maxLabelHeight=h*.82;
+const words=displayName.trim().split(/\s+/);
+const measure=document.createElement('canvas').getContext('2d');
+let fontSize=Math.min(isDense?10:12,h*.65), lines=[];
+function wrapAt(size){
+ measure.font='700 '+size+'px Arial';
+ const result=[]; let line='';
+ for(const word of words){
+  const candidate=line?line+' '+word:word;
+  if(line&&measure.measureText(candidate).width>maxLabelWidth){result.push(line);line=word;}else line=candidate;
+ }
+ if(line)result.push(line);
+ return result;
+}
+for(let i=0;i<120;i++){
+ lines=wrapAt(fontSize);
+ if(lines.every(line=>measure.measureText(line).width<=maxLabelWidth)&&lines.length*fontSize*1.15<=maxLabelHeight)break;
+ fontSize*=.94;
+}
+label.style.setProperty('font-size',fontSize.toFixed(2)+'px','important');
 label.style.setProperty('stroke','none','important');
 label.style.setProperty('font-weight','700','important');
-// Fit the complete name inside its own zone, independent of stylesheet font sizes.
-const maxLabelWidth=w*.82;
-label.setAttribute('textLength',Math.min(maxLabelWidth,baseSize*displayName.length*.60).toFixed(2));
-label.setAttribute('lengthAdjust','spacingAndGlyphs');
-label.setAttribute('font-weight','700');
 label.setAttribute('fill','#000000');
-label.textContent=displayName;
+label.setAttribute('aria-label',displayName);
+const lineHeight=fontSize*1.15;
+lines.forEach((line,i)=>{
+ const span=create('tspan',{x:x+w/2,y:y+h/2+(i-(lines.length-1)/2)*lineHeight});
+ span.textContent=line;label.appendChild(span);
+});
 label.setAttribute('clip-path','url(#'+clipId+')');
 group.appendChild(label);
 svg.appendChild(group);group._r=r}
