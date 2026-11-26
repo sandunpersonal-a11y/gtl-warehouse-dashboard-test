@@ -1041,8 +1041,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 .master-filters select{padding:9px 12px;min-width:180px;max-width:100%;border:1px solid #c6d7e2;border-radius:8px;background:white;color:#163b52}
 .master-note{font-size:11px;color:#63798a}
 @media(max-width:600px){.master-filters label{width:100%}.master-filters select{width:100%}}
-</style>
-<style id="gtl-corporate-navigation-buttons">
+</style><style id="gtl-corporate-navigation-buttons">
 .tabs .tab, .controls #buildingFilter, .controls #refreshDashboardButton {
   background:linear-gradient(180deg,#218b7b,#106e60);
   color:#fff; border:1px solid #0c6155; border-radius:9px;
@@ -1060,12 +1059,14 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   appearance:none;-webkit-appearance:none;
   padding-right:42px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Crect x='2' y='2' width='28' height='24' rx='5' fill='%23064c43'/%3E%3Cpath d='M10 11l6 6 6-6' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(180deg,#218b7b,#106e60);
-  background-repeat:no-repeat;background-position:right 5px center,center;background-size:32px 28px,100% 100%;
+  background-repeat:no-repeat,no-repeat;background-position:right 5px center,center;background-size:32px 28px,100% 100%;
 }
-.controls #buildingFilter:hover,.controls #buildingFilter:active {background-color:#106e60; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Crect x='2' y='2' width='28' height='24' rx='5' fill='%23064c43'/%3E%3Cpath d='M10 11l6 6 6-6' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(180deg,#147969,#0a5b50);}
+.controls #buildingFilter:hover,.controls #buildingFilter:active {background-color:#106e60; background-repeat:no-repeat,no-repeat; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Crect x='2' y='2' width='28' height='24' rx='5' fill='%23064c43'/%3E%3Cpath d='M10 11l6 6 6-6' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(180deg,#147969,#0a5b50);}
 .controls #buildingFilter option{background:#fff;color:#073b4e;}
 .tabs .tab:focus-visible,.controls #buildingFilter:focus-visible,.controls #refreshDashboardButton:focus-visible{outline:2px solid #e9c65c;outline-offset:3px;}
 @media(prefers-reduced-motion:reduce){.tabs .tab,.controls #buildingFilter,.controls #refreshDashboardButton{transition:none;}}
+
+.controls #buildingFilter { background-repeat:no-repeat,no-repeat !important; }
 </style>
 </head>
 
@@ -1989,12 +1990,12 @@ function floorHTML(data,building) {
     {
       type:"ground",
       label:"Ground Floor",
-      color:"#269B78"
+      color:"#F1C75A"
     },
     {
       type:"first",
       label:"First Floor",
-      color:"#477DA8"
+      color:"#F1C75A"
     }
   ];
 
@@ -2601,7 +2602,7 @@ function gtlReceiveZoneRows(data,live=false){
   subLocation:String(r.subLocation||"").trim(),
   storeType:String(r.storeType||"").trim(),
   total:Number(r.total)||0,non:Number(r.non)||0,rented:Number(r.rented)||0,
-  used:Number(r.used)||0,balance:Math.max(0,Number(r.balance)||0),
+  used:Number(r.used)||0,balance:Number(r.balance)||0,
   cbm:Number(r.cbm)||0
  })).filter(r=>r.building&&r.floor);
  rows=gtlZoneSummary(gtlZoneRecords);
