@@ -87,13 +87,21 @@
 .map svg .zone-label-underlay{fill:#f5f5f5!important;fill-opacity:1!important;opacity:1!important;stroke:none!important;pointer-events:none!important;animation:none!important;transition:none!important}
 </style>
 <style id="gtl-zone-filter-icons-only">
-.filters select#building,.filters select#floor,.filters select#type,.filters input#search {
+.filters .zone-filter-trigger,.filters input#search {
   direction:ltr; padding-right:36px; background-repeat:no-repeat; background-position:right 11px center; background-size:18px 18px;
 }
-.filters select#building,.filters select#floor,.filters select#type {
+.filters .zone-filter-trigger {
   appearance:none; -webkit-appearance:none; -moz-appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23076B59'/%3E%3Cpath d='m7 10 5 5 5-5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
+.zone-filter-picker {position:relative;min-width:0;}
+.zone-filter-picker:focus-within {z-index:1001;}
+.zone-filter-label {display:block;color:#173e59;font-size:11px;font-weight:800;}
+.filters .zone-filter-trigger {display:block;width:100%;margin-top:4px;padding:9px 36px 9px 10px;border:1px solid #c8d9e5;border-radius:8px;font:13px Calibri,"Segoe UI",Arial,sans-serif;background-color:#fff;color:#183d55;cursor:pointer;text-align:left;overflow-wrap:anywhere;}
+.zone-filter-options {position:absolute;top:calc(100% + 4px);inset-inline:0;max-height:min(45vh,280px);overflow:auto;overscroll-behavior:contain;padding:4px;background:#fff;border:1px solid #c8d9e5;border-radius:8px;box-shadow:0 5px 12px #073b4e25;}
+.zone-filter-options button {display:block;width:100%;padding:8px 11px;border:1px solid #d6e9e5;border-radius:9px;background:#fff;color:#063c43;font:700 12px Arial,sans-serif;text-align:left;cursor:pointer;overflow-wrap:anywhere;}
+.zone-filter-options button:hover,.zone-filter-options button:focus-visible,.zone-filter-options button[aria-pressed="true"] {background:#e8f7f1;}
+@media(max-width:700px){.filters .zone-filter-trigger,.zone-filter-options button,.filters input#search {min-height:44px;}}
 .filters input#search {
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23076B59'/%3E%3Ccircle cx='10.5' cy='10.5' r='4.5' fill='none' stroke='white' stroke-width='1.8'/%3E%3Cpath d='m14 14 4 4' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
 }
@@ -316,6 +324,71 @@ const amount=(r,k)=>Math.max(0,Number(r[k])||0);
 const NS='http://www.w3.org/2000/svg';
 const create=(tag,attrs={})=>{const e=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,String(v)));return e};
 let status='all',selected=null,renderKey='',mappedCache=new Map(),hideEmptyStatus=false;
+const zoneFilterPickers = ['building','floor','type'].map(id=>{
+ const select=$(id),label=select.parentElement;
+ const wrapper=document.createElement('div');
+ const title=document.createElement('span');
+ const trigger=document.createElement('button');
+ const list=document.createElement('div');
+ wrapper.className='zone-filter-picker';
+ title.className='zone-filter-label';
+ title.id=id+'-filter-label';
+ title.textContent=label.textContent.trim();
+ trigger.id=id+'-filter-trigger';
+ trigger.className='zone-filter-trigger';
+ trigger.type='button';
+ trigger.setAttribute('aria-labelledby',title.id+' '+trigger.id);
+ trigger.setAttribute('aria-controls',id+'-filter-options');
+ trigger.setAttribute('aria-expanded','false');
+ list.id=id+'-filter-options';
+ list.className='zone-filter-options';
+ list.setAttribute('role','group');
+ list.setAttribute('aria-labelledby',title.id);
+ list.hidden=true;
+ select.hidden=true;
+ select.style.display='none';
+ label.replaceWith(wrapper);
+ wrapper.append(title,select,trigger,list);
+
+ function close(returnFocus=false){
+  list.hidden=true;
+  trigger.setAttribute('aria-expanded','false');
+  if(returnFocus)trigger.focus();
+ }
+ trigger.onclick=()=>{
+  if(!list.hidden){close();return;}
+  list.replaceChildren(...Array.from(select.options,option=>{
+   const button=document.createElement('button');
+   button.type='button';
+   button.textContent=option.textContent;
+   button.setAttribute('aria-pressed',String(option.selected));
+   button.onclick=()=>{
+    if(select.value!==option.value){
+     select.value=option.value;
+     select.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    close(true);
+   };
+   return button;
+  }));
+  list.hidden=false;
+  trigger.setAttribute('aria-expanded','true');
+  (list.querySelector('[aria-pressed="true"]')||list.firstElementChild)?.focus();
+ };
+ wrapper.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!list.hidden){event.preventDefault();close(true);}
+ });
+ wrapper.addEventListener('focusout',event=>{
+  if(!wrapper.contains(event.relatedTarget))close();
+ });
+ document.addEventListener('pointerdown',event=>{
+  if(!wrapper.contains(event.target))close();
+ });
+ return ()=>{
+  trigger.disabled=!select.options.length;
+  trigger.textContent=select.selectedOptions[0]?.textContent||title.textContent;
+ };
+});
 function options(el,items,preferred){el.replaceChildren(...items.map(([v,t])=>new Option(t,v)));el.value=items.some(([v])=>v===preferred)?preferred:items[0]?.[0]||''}
 function buildingChange(){const b=$('building').value,previous=$('floor').value;const floors=[...new Set(ROWS.filter(r=>b==='ALL'||r.building===b).map(r=>floorOf(r.floor)))];const opts=floors.map(f=>[f,f==='ground'?'Ground Floor':'First / Mezzanine Floor']);if(floors.length>1)opts.unshift(['both','Both Floors (Ground + First)']);options($('floor'),opts,previous);floorChange()}
 function floorChange(){const b=$('building').value,f=$('floor').value,rr=ROWS.filter(r=>(b==='ALL'||r.building===b)&&(f==='both'||floorOf(r.floor)===f));const types=[...new Set(ROWS.map(r=>r.storeType).filter(Boolean))];options($('type'),[['all','All Storage Types'],...types.map(t=>[t,t])],$('type').value);render()}
@@ -447,7 +520,7 @@ if(b==='GTL BUILDING'&&f==='ground'){
 }
 box.appendChild(svg);floor.appendChild(box);floor._svg=svg}
 function updateStatus(){statusButtons();const all=filteredRows();updateKpis(all);document.querySelectorAll('.floor').forEach(floor=>{floor.classList.toggle('single-status',false);floor.querySelectorAll('g[data-zone]').forEach(g=>{const r=g._r,ok=visibleRow(r);const fixed=Boolean(fixedZoneColor(r));const hasSelectedArea=status==='all'||amount(r,status)>0;const temperatureOnly=$('type').value==='Temperature Control';g.style.visibility=((!temperatureOnly&&fixed)||(ok&&hasSelectedArea))?'visible':'hidden';g.querySelectorAll('.fill').forEach(rect=>{const k=rect.dataset.kind;const dominant=KEYS.reduce((best,key)=>amount(r,key)>amount(r,best)?key:best,KEYS[0]);const show=fixed||ok&&(status==='all'?true:status===k);rect.style.opacity=show?'1':'0';rect.classList.remove('zone-reveal');if(rect.style.opacity!=='0'&&floor.dataset.visible==='yes')requestAnimationFrame(()=>rect.classList.add('zone-reveal'));});g.querySelectorAll('.snow-overlay').forEach(el=>{el.style.opacity=ok&&(status==='all'||status===el.dataset.kind)?($('type').value==='Temperature Control'?'.52':'.38'):'0'});g.style.opacity='1'});floor.querySelectorAll('.zone-tile').forEach(t=>{paintTile(t,t._r);t.hidden=!(($('type').value!=='Temperature Control'&&fixedZoneColor(t._r))||(visibleRow(t._r)&&(status==='all'||amount(t._r,status)>0)));});const detail=floor.querySelector('.detail');if(detail)detail.hidden=true})}
-function render(){hideTip();selected=null;statusButtons();const b=$('building').value,f=$('floor').value;const all=filteredRows();const floors=f==='both'?['ground','first']:[f];const stage=$('stage');stage.replaceChildren();for(const currentBuilding of (b==='ALL'?ORDER:[b]))for(const fl of floors){if(!MAPS[currentBuilding]?.[fl])continue;const floor=document.createElement('article');floor.className='floor';floor.dataset.floor=fl;floor.dataset.building=currentBuilding;floor.dataset.building=currentBuilding;floor.innerHTML='<h2>'+safe(currentBuilding)+' — '+(fl==='ground'?'GROUND FLOOR':'FIRST / MEZZANINE FLOOR')+'</h2>';const rr=all.filter(r=>r.building===currentBuilding&&floorOf(r.floor)===fl);
+function render(){zoneFilterPickers.forEach(sync=>sync());hideTip();selected=null;statusButtons();const b=$('building').value,f=$('floor').value;const all=filteredRows();const floors=f==='both'?['ground','first']:[f];const stage=$('stage');stage.replaceChildren();for(const currentBuilding of (b==='ALL'?ORDER:[b]))for(const fl of floors){if(!MAPS[currentBuilding]?.[fl])continue;const floor=document.createElement('article');floor.className='floor';floor.dataset.floor=fl;floor.dataset.building=currentBuilding;floor.dataset.building=currentBuilding;floor.innerHTML='<h2>'+safe(currentBuilding)+' — '+(fl==='ground'?'GROUND FLOOR':'FIRST / MEZZANINE FLOOR')+'</h2>';const rr=all.filter(r=>r.building===currentBuilding&&floorOf(r.floor)===fl);
 if($('type').value==='Temperature Control'&&!rr.some(r=>visibleRow(r)&&(status==='all'||amount(r,status)>0)))continue;
 if(status!=='all' && !rr.some(r=>($('type').value!=='Temperature Control'&&fixedZoneColor(r))||visibleRow(r)&&amount(r,status)>0))continue;
 const mapping=mappingFor(currentBuilding,fl);if(mapping){buildMapped(floor,rr,currentBuilding,fl,mapping);const note=document.createElement('p');note.className='note';note.textContent='Interactive overlay uses available mapped zone boundaries. Select a status or click a zone for SQFT details.';floor.appendChild(note);const list=document.createElement('details');list.className='zone-access-list';list.innerHTML='<summary>All zones · Hover for SQFT details</summary>';renderTiles(list,rr);floor.appendChild(list)}else{if(MAPS[currentBuilding]?.[fl]){const plan=document.createElement('div');plan.className='map';const image=document.createElement('img');image.src=MAPS[currentBuilding][fl];image.alt=b+' original '+fl+' floor plan';image.loading='lazy';plan.appendChild(image);floor.appendChild(plan)}const info=document.createElement('div');info.className='unsupported';info.textContent='Zone status by ID is interactive below. Exact floor-plan zone boundaries have not been supplied/verified for this building; colours here are data-linked but not geographic.';floor.appendChild(info);renderTiles(floor,rr)}const details=document.createElement('div');details.className='detail';details.hidden=true;floor.appendChild(details);const prev=document.createElement('details');prev.className='preview';prev.innerHTML='<summary>View original '+(fl==='ground'?'Ground':'First')+' Floor Layout</summary><img loading="lazy" src="'+safe(MAPS[currentBuilding]?.[fl]||'')+'" alt="Original floor layout">';floor.appendChild(prev);stage.appendChild(floor)}updateStatus();startZoneObservers()}
@@ -469,6 +542,15 @@ window.addEventListener('load',reportZoneHeight);
 window.addEventListener('message',e=>{
  if(e.origin!==location.origin||!e.data)return;
  const m=e.data;
+ if(m.type==='gtl-reset-filters'&&e.source===window.parent){
+  $('building').value='ALL';
+  $('floor').value='';
+  $('type').value='all';
+  $('search').value='';
+  status='all';
+  hideEmptyStatus=false;
+  buildingChange();
+ }
  if(m.type==='gtl-master-filters'||m.type==='gtl-building-filter'){
   const b=m.building==='ALL'?'ALL':m.building;
   if(b&&[...$('building').options].some(o=>o.value===b)){$('building').value=b;buildingChange()}
