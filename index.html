@@ -2593,7 +2593,11 @@ $("gtlLogo").src = "./gtl-icon-1024.png?v=26";
    IT API integration: normalize incoming data into the same row keys here. */
 const GTL_ZONE_CONFIG={source:"snapshot", apiUrl:"", refreshSeconds:120};
 let gtlZoneRecords=[];
-let gtlUploadedSnapshot=null;
+const gtlSupabaseUrl="https://fgsskiziqssidoqlaokz.supabase.co";
+const gtlPublishableKey="sb_publishable_T9CdcITrgWt5PNKT7WruRw_wlutCg-C";
+const gtlAdminEmail="sandunpersonal@gmail.com";
+const gtlSupabase=import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+esm")
+ .then(({createClient})=>createClient(gtlSupabaseUrl,gtlPublishableKey));
 function gtlFloorChanged(){renderDashboard();gtlSyncMap();}
 function gtlStatusChanged(){gtlSyncMap();}
 function gtlUpdateFloors(){
@@ -2666,7 +2670,7 @@ window.GTLReceiveZoneData=function(payload){
  if(payload?.rows)gtlReceiveZoneRows(payload.rows,true);
  else showError("Invalid zone-wise data received.");
 };
-function loadData(){
+async function loadData(){
  if(loading)return;
  loading=true;
  const api=GTL_ZONE_CONFIG.apiUrl;
@@ -2679,13 +2683,33 @@ function loadData(){
   setTimeout(()=>{if(loading){loading=false;showError("API timeout.");}},20000);
   return;
  }
- fetch("./zone-data.json?ts="+Date.now(),{cache:"no-store"})
- .then(r=>{if(!r.ok)throw Error("Snapshot not found");return r.json()})
- .then(d=>{
-  const snapshot=gtlUploadedSnapshot||d;
-  gtlReceiveZoneRows(snapshot.rows||[],false,snapshot.updatedAt);
- })
- .catch(err=>{loading=false;showError("Zone-wise data loading failed: "+err.message);});
+ const errorBox=$("error");
+ errorBox.style.display="none";
+ let sharedError;
+ try{
+  const client=await gtlSupabase;
+  const {data,error}=await client.from("gtl_dashboard_snapshot").select("rows,updated_at").eq("id",1).single();
+  if(error) throw error;
+  if(data.rows.length){
+   gtlReceiveZoneRows(data.rows,false,data.updated_at);
+   return;
+  }
+ }catch(error){
+  sharedError=error;
+ }
+ try{
+  if(!gtlZoneRecords.length){
+   const response=await fetch("./zone-data.json?ts="+Date.now(),{cache:"no-store"});
+   if(!response.ok) throw new Error("Snapshot not found");
+   const snapshot=await response.json();
+   gtlReceiveZoneRows(snapshot.rows||[],false,snapshot.updatedAt);
+  }
+  if(sharedError) showError("Unable to refresh shared warehouse data. Showing the last available data.");
+ }catch(error){
+  showError("Zone-wise data loading failed: "+error.message);
+ }finally{
+  loading=false;
+ }
 }
 const gtlOriginalRenderDashboard=renderDashboard;
 renderDashboard=function(){
@@ -2727,7 +2751,9 @@ loadData();
 .gtl-credit-footer .footer-title {color:#073b4e;font-weight:700;}
 .gtl-credit-footer .developer-name {font-weight:400 !important;color:#5b788e;}
 .excel-upload {max-width:1750px;margin:18px auto 0;padding:0 12px;text-align:right;}
-.excel-upload button {background:#003f26;color:#fff;border:0;border-radius:9px;padding:10px 14px;font:inherit;cursor:pointer;}
+.excel-upload button {background:#003f26;color:#fff;border:0;border-radius:6px;padding:6px 9px;font:inherit;font-size:12px;cursor:pointer;}
+.excel-upload form {margin-top:8px;}
+.excel-upload input[type="password"] {margin:0 6px;padding:5px;}
 .excel-upload button:disabled {opacity:.6;cursor:wait;}
 .excel-upload p {margin:8px 0;color:#073b4e;}
 @media(max-width:767px){.gtl-credit-footer{font-size:10px;padding:15px 10px 20px;}}
@@ -2739,8 +2765,15 @@ loadData();
 </style>
 <section class="excel-upload" aria-label="Excel data upload">
   <input id="excelFile" type="file" accept=".xlsx" hidden>
-  <button id="excelUpload" type="button">Upload Excel</button>
-  <button id="excelDownload" type="button" hidden>Download snapshot</button>
+  <button id="excelUpload" type="button" hidden>Upload Excel</button>
+  <button id="excelSignOut" type="button" hidden>Sign out</button>
+  <details id="excelAdminLogin">
+    <summary>Admin sign in</summary>
+    <form id="excelAdminForm">
+      <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit">Sign in</button>
+    </form>
+  </details>
   <p id="excelUploadTime" hidden></p>
   <p id="excelUploadStatus" role="status" hidden></p>
 </section>
@@ -2790,39 +2823,66 @@ function excelZoneRows(sheet, xlsx) {
 }
 
 const excelInput=$("excelFile"),excelButton=$("excelUpload"),excelStatus=$("excelUploadStatus");
+const excelLogin=$("excelAdminLogin"),excelSignOut=$("excelSignOut");
+function showExcelStatus(message){
+  excelStatus.hidden=false;
+  excelStatus.textContent=message;
+}
+function showExcelAdmin(user){
+  const admin=user?.email===gtlAdminEmail&&Boolean(user.email_confirmed_at);
+  excelButton.hidden=!admin;
+  excelSignOut.hidden=!admin;
+  excelLogin.hidden=Boolean(admin);
+}
+gtlSupabase.then(client=>{
+  client.auth.onAuthStateChange((event,session)=>showExcelAdmin(session?.user));
+}).catch(()=>{excelLogin.hidden=true;});
+$("excelAdminForm").onsubmit=async event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  const submit=form.querySelector("button");
+  submit.disabled=true;
+  try{
+    const client=await gtlSupabase;
+    const {error}=await client.auth.signInWithPassword({email:gtlAdminEmail,password:form.elements.password.value});
+    if(error) throw error;
+    excelStatus.hidden=true;
+  }catch(error){
+    showExcelStatus("Admin sign-in failed: "+error.message);
+  }finally{
+    form.reset();
+    submit.disabled=false;
+  }
+};
+excelSignOut.onclick=async()=>{
+  const client=await gtlSupabase;
+  const {error}=await client.auth.signOut();
+  if(error) showExcelStatus("Sign-out failed: "+error.message);
+  else excelStatus.hidden=true;
+};
 excelButton.onclick=()=>excelInput.click();
 excelInput.onchange=async()=>{
   const file=excelInput.files[0];
   if(!file) return;
   excelButton.disabled=true;
-  excelStatus.hidden=false;
-  excelStatus.textContent="Reading Excel file…";
+  showExcelStatus("Reading Excel file…");
   try{
     const xlsx=await import("https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs");
     const workbook=xlsx.read(new Uint8Array(await file.arrayBuffer()),{type:"array"});
     const sheet=workbook.Sheets.Details;
     if(!sheet) throw new Error("Details tab not found.");
     const rows=excelZoneRows(sheet,xlsx);
-    const updatedAt=new Date().toISOString();
-    gtlUploadedSnapshot={updatedAt,rows};
-    gtlReceiveZoneRows(rows,false,updatedAt);
-    $("excelDownload").hidden=false;
-    excelStatus.textContent=rows.length+" zones loaded · Preview only";
+    const client=await gtlSupabase;
+    const {data,error}=await client.from("gtl_dashboard_snapshot").update({rows}).eq("id",1).select("rows,updated_at").single();
+    if(error) throw error;
+    gtlReceiveZoneRows(data.rows,false,data.updated_at);
+    showExcelStatus(data.rows.length+" zones saved and visible to dashboard viewers.");
   }catch(error){
     excelStatus.textContent="Upload failed: "+error.message;
   }finally{
     excelInput.value="";
     excelButton.disabled=false;
   }
-};
-$("excelDownload").onclick=()=>{
-  const snapshot=new Blob([JSON.stringify(gtlUploadedSnapshot,null,2)+"\n"],{type:"application/json"});
-  const url=URL.createObjectURL(snapshot);
-  const link=document.createElement("a");
-  link.href=url;
-  link.download="zone-data.json";
-  link.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 </script>
 
