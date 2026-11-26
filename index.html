@@ -27,7 +27,7 @@
   --green:#43B78C;
   --blue:#5599D1;
   --maroon:#B85679;
-  --gold:#DDAE39;
+  --gold:#F1C75A;
   --text:#082b49;
   --muted:#5b788e;
   --border:#cce9e0;
@@ -181,22 +181,15 @@ main {
 .kpi {
   min-width:0;
   min-height:105px;
+  padding:13px;
   display:flex;
-  flex-direction:column;
-  overflow:hidden;
+  align-items:center;
+  gap:12px;
   background:linear-gradient(140deg,#ffffff,var(--tint));
   border:1px solid #d4e6e3;
   border-top:4px solid var(--accent);
   border-radius:13px;
   box-shadow:0 4px 12px #0c6b5020;
-}
-
-.kpi-body {
-  display:flex;
-  flex:1;
-  align-items:center;
-  gap:12px;
-  padding:8px 13px;
 }
 
 .kpi-icon {
@@ -216,15 +209,8 @@ main {
   stroke-linejoin:round;
 }
 
-.available-kpi .kpi-icon {
-  color:#F1C75A;
-}
-
 .kpi label {
   display:block;
-  padding:4px 8px;
-  background:var(--accent);
-  color:var(--heading-ink,#07141f);
   font-size:11px;
   font-weight:800;
 }
@@ -393,7 +379,6 @@ main {
 
 .fill {
   height:100%;
-  background:var(--gold);
   border-radius:20px;
   transition:width .6s ease;
 }
@@ -640,9 +625,9 @@ tbody tr:nth-child(even) {
   .bottom-grid {
     grid-template-columns:1fr;
   }
-  .kpi-body {
+  .kpi {
     gap:7px;
-    padding:6px 10px;
+    padding:10px;
   }
   .kpi-icon {
     width:34px;
@@ -736,10 +721,7 @@ tbody tr:nth-child(even) {
     width:100%;
     min-width:0;
     min-height:93px;
-  }
-
-  .kpi-body {
-    padding:6px 10px;
+    padding:10px;
     gap:8px;
   }
 
@@ -767,9 +749,11 @@ tbody tr:nth-child(even) {
   .kpi.available-kpi {
     grid-column:1/-1;
     min-height:92px;
+    justify-content:center;
+    gap:20px;
     background:linear-gradient(110deg,#fffdf1,#fff2c5);
     border:1px solid #f1c34c;
-    border-top:4px solid var(--accent);
+    border-top:4px solid #F1C75A;
   }
 
   .available-kpi .kpi-icon {
@@ -927,6 +911,7 @@ tbody tr:nth-child(even) {
 .available-kpi .kpi-icon {width:34px !important;height:34px !important;}
 .available-kpi label {font-size:9px !important;}
 .available-kpi strong {font-size:clamp(16px,4.3vw,21px) !important;}
+.kpi.available-kpi {gap:8px !important;justify-content:flex-start !important;}
 }
 html,body {background:#fff !important;background-image:none !important;background-attachment:scroll !important;}
 /* SUBTLE 3D DEPTH, WITHOUT DISTRACTING FROM DATA */
@@ -972,8 +957,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   .tabs{margin-bottom:10px}
   .tab{padding:9px 18px}
   .kpis{gap:10px;margin-bottom:10px}
-  .kpi{min-height:79px}
-  .kpi-body{padding:5px 11px;gap:9px}
+  .kpi{min-height:79px;padding:9px 11px;gap:9px}
   .kpi-icon{width:35px;height:35px}
   .kpi label{font-size:10px}
   .kpi strong{font-size:clamp(17px,1.65vw,24px);margin:3px 0}
@@ -997,8 +981,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   .header{padding:10px}
   .brand h1{font-size:16px}
   .logo{width:48px;height:48px}
-  .kpi{min-height:80px}
-  .kpi-body{padding:5px 9px}
+  .kpi{min-height:80px;padding:9px}
   .kpi-icon{width:29px;height:29px}
   .kpi strong{font-size:clamp(15px,4vw,19px)}
   .kpi.available-kpi{min-height:80px}
@@ -1058,7 +1041,33 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 .master-filters select{padding:9px 12px;min-width:180px;max-width:100%;border:1px solid #c6d7e2;border-radius:8px;background:white;color:#163b52}
 .master-note{font-size:11px;color:#63798a}
 @media(max-width:600px){.master-filters label{width:100%}.master-filters select{width:100%}}
-</style></head>
+</style>
+<style id="gtl-corporate-navigation-buttons">
+.tabs .tab, .controls #buildingFilter, .controls #refreshDashboardButton {
+  background:linear-gradient(180deg,#218b7b,#106e60);
+  color:#fff; border:1px solid #0c6155; border-radius:9px;
+  box-shadow:0 3px 0 #084e45,0 5px 9px #073b4e25,inset 0 1px 0 #ffffff35;
+  transition:background .16s ease,box-shadow .16s ease,transform .16s ease;
+  cursor:pointer;
+}
+.tabs .tab:hover,.controls #refreshDashboardButton:hover,.controls #buildingFilter:hover {background:linear-gradient(180deg,#299a88,#147969);}
+.tabs .tab.active,.tabs .tab:active,.controls #refreshDashboardButton:active,.controls #buildingFilter:active {
+  background:linear-gradient(180deg,#064c43,#096254);color:#fff;border-color:#043e37;
+  box-shadow:inset 0 3px 6px #002d2a80,inset 0 1px 2px #002d2a55;
+  transform:translateY(2px);
+}
+.controls #buildingFilter {
+  appearance:none;-webkit-appearance:none;
+  padding-right:42px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Crect x='2' y='2' width='28' height='24' rx='5' fill='%23064c43'/%3E%3Cpath d='M10 11l6 6 6-6' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(180deg,#218b7b,#106e60);
+  background-repeat:no-repeat;background-position:right 5px center,center;background-size:32px 28px,100% 100%;
+}
+.controls #buildingFilter:hover,.controls #buildingFilter:active {background-color:#106e60; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='28' viewBox='0 0 32 28'%3E%3Crect x='2' y='2' width='28' height='24' rx='5' fill='%23064c43'/%3E%3Cpath d='M10 11l6 6 6-6' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),linear-gradient(180deg,#147969,#0a5b50);}
+.controls #buildingFilter option{background:#fff;color:#073b4e;}
+.tabs .tab:focus-visible,.controls #buildingFilter:focus-visible,.controls #refreshDashboardButton:focus-visible{outline:2px solid #e9c65c;outline-offset:3px;}
+@media(prefers-reduced-motion:reduce){.tabs .tab,.controls #buildingFilter,.controls #refreshDashboardButton{transition:none;}}
+</style>
+</head>
 
 <body>
 
@@ -1125,92 +1134,82 @@ html,body {background:#fff !important;background-image:none !important;backgroun
   <div class="kpis">
 
     <div class="kpi"
-      style="--accent:#466a83;--tint:#e8f1f8;--heading-ink:#fff">
+      style="--accent:#466a83;--tint:#e8f1f8">
 
-      <label>TOTAL AREA</label>
-      <div class="kpi-body">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 48 48">
-            <path d="M5 43V18L24 6l19 12v25M12 43V22h24v21M19 43V30h10v13M5 18h38M17 22v-7h14v7"/>
-          </svg>
-        </div>
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="M5 43V18L24 6l19 12v25M12 43V22h24v21M19 43V30h10v13M5 18h38M17 22v-7h14v7"/>
+        </svg>
+      </div>
 
-        <div>
-          <strong id="kTotal">0</strong>
-          <small>SQ. FT.</small>
-        </div>
+      <div>
+        <label>TOTAL AREA</label>
+        <strong id="kTotal">0</strong>
+        <small>SQ. FT.</small>
       </div>
     </div>
 
     <div class="kpi"
-      style="--accent:#B85679;--tint:#fce8f0;--heading-ink:#fff">
+      style="--accent:#B85679;--tint:#fce8f0">
 
-      <label>NON-SELLING AREA</label>
-      <div class="kpi-body">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 48 48">
-            <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
-          </svg>
-        </div>
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 4 20 12-20 12L4 16 24 4ZM4 26l20 12 20-12M4 35l20 10 20-10"/>
+        </svg>
+      </div>
 
-        <div>
-          <strong id="kNon">0</strong>
-          <small>SQ. FT.</small>
-        </div>
+      <div>
+        <label>NON-SELLING AREA</label>
+        <strong id="kNon">0</strong>
+        <small>SQ. FT.</small>
       </div>
     </div>
 
     <div class="kpi"
       style="--accent:#43B78C;--tint:#e1faed">
 
-      <label>RENTED AREA</label>
-      <div class="kpi-body">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 48 48">
-            <path d="M4 14 13 9l8 6-9 15-8-5V14ZM44 14l-9-5-8 6 9 15 8-5V14ZM17 19l8-5 7 5-5 4-5-2M12 30l12 12 4-3M17 34l8 8M24 21l12 11-3 4-4-2M33 36l-4 4-5-3"/>
-          </svg>
-        </div>
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="M4 14 13 9l8 6-9 15-8-5V14ZM44 14l-9-5-8 6 9 15 8-5V14ZM17 19l8-5 7 5-5 4-5-2M12 30l12 12 4-3M17 34l8 8M24 21l12 11-3 4-4-2M33 36l-4 4-5-3"/>
+        </svg>
+      </div>
 
-        <div>
-          <strong id="kRented">0</strong>
-          <small>SQ. FT.</small>
-        </div>
+      <div>
+        <label>RENTED AREA</label>
+        <strong id="kRented">0</strong>
+        <small>SQ. FT.</small>
       </div>
     </div>
 
     <div class="kpi"
       style="--accent:#5599D1;--tint:#e4f0ff">
 
-      <label>UTILIZED AREA</label>
-      <div class="kpi-body">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 48 48">
-            <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21M14 8l20 12"/>
-          </svg>
-        </div>
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21M14 8l20 12"/>
+        </svg>
+      </div>
 
-        <div>
-          <strong id="kUsed">0</strong>
-          <small>SQ. FT.</small>
-        </div>
+      <div>
+        <label>UTILIZED AREA</label>
+        <strong id="kUsed">0</strong>
+        <small>SQ. FT.</small>
       </div>
     </div>
 
     <div class="kpi available-kpi"
-      style="--accent:var(--gold);--tint:#fff4d0">
+      style="--accent:#F1C75A;--tint:#fff4d0">
 
-      <label>AVAILABLE AREA</label>
-      <div class="kpi-body">
-        <div class="kpi-icon">
-          <svg viewBox="0 0 48 48">
-            <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21"/>
-          </svg>
-        </div>
+      <div class="kpi-icon">
+        <svg viewBox="0 0 48 48">
+          <path d="m24 3 20 11v22L24 47 4 36V14L24 3ZM4 14l20 12 20-12M24 26v21"/>
+        </svg>
+      </div>
 
-        <div>
-          <strong id="kBalance">0</strong>
-          <small>SQ. FT.</small>
-        </div>
+      <div>
+        <label>AVAILABLE AREA</label>
+        <strong id="kBalance">0</strong>
+        <small>SQ. FT.</small>
       </div>
     </div>
 
@@ -1320,7 +1319,7 @@ html,body {background:#fff !important;background-image:none !important;backgroun
 </section>
 
 <section id="zoneMapPage" class="hidden">
-  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=gtl-mezzanine-14" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
+  <iframe id="embeddedZoneMap" src="./zone-maps.html?v=executive-premium-08" title="All Buildings Ground and First Floor Zone Maps" loading="lazy"></iframe>
 </section>
 
 </main>
@@ -1650,7 +1649,7 @@ function destroyCharts() {
 let overviewKpiAnimationFrame=0;
 function renderKPIs(data) {
   const fields=[["kTotal","total"],["kNon","non"],["kRented","rented"],["kUsed","used"],["kBalance","balance"]];
-  const values=fields.map(([id,key])=>({node:$(id),target:Math.max(0,sum(data,key))}));
+  const values=fields.map(([id,key])=>({node:$(id),target:Number(sum(data,key))||0}));
   cancelAnimationFrame(overviewKpiAnimationFrame);
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
     values.forEach(({node,target})=>node.textContent=fmt(target));return;
@@ -1989,11 +1988,13 @@ function floorHTML(data,building) {
   const floors=[
     {
       type:"ground",
-      label:"Ground Floor"
+      label:"Ground Floor",
+      color:"#269B78"
     },
     {
       type:"first",
-      label:"First Floor"
+      label:"First Floor",
+      color:"#477DA8"
     }
   ];
 
@@ -2005,7 +2006,7 @@ function floorHTML(data,building) {
 
     if(!d.length) return "";
 
-    const available=Math.max(0,sum(d,"balance"));
+    const available=sum(d,"balance");
     const total=sum(d,"total");
     const percentage=pct(available,total);
 
@@ -2025,6 +2026,7 @@ function floorHTML(data,building) {
           <div class="fill"
             style="
               width:${Math.max(0,Math.min(100,percentage))}%;
+              background:${f.color};
             ">
           </div>
         </div>
@@ -2203,8 +2205,8 @@ function renderFloorSummary(data) {
       r => floorType(r.floor) === f.type
     );
 
-    const available = Math.max(0,sum(d, "balance"));
-    const total = Math.max(0,sum(d, "total"));
+    const available = sum(d, "balance");
+    const total = sum(d, "total");
 
     const metrics = [
       ["AVAILABLE SQ. FT.", fmt(available)],
@@ -2260,7 +2262,7 @@ function renderFloorSummary(data) {
 ======================================== */
 
 function renderAvailability(data) {
-  $("availableTotal").textContent=fmt(Math.max(0,sum(data,"balance")));
+  $("availableTotal").textContent=fmt(sum(data,"balance"));
 
   renderFloorSummary(data);
 
@@ -2599,7 +2601,7 @@ function gtlReceiveZoneRows(data,live=false){
   subLocation:String(r.subLocation||"").trim(),
   storeType:String(r.storeType||"").trim(),
   total:Number(r.total)||0,non:Number(r.non)||0,rented:Number(r.rented)||0,
-  used:Number(r.used)||0,balance:Number(r.balance)||0,
+  used:Number(r.used)||0,balance:Math.max(0,Number(r.balance)||0),
   cbm:Number(r.cbm)||0
  })).filter(r=>r.building&&r.floor);
  rows=gtlZoneSummary(gtlZoneRecords);
