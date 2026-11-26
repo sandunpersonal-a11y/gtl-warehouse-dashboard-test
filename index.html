@@ -107,6 +107,7 @@ button { cursor:pointer; }
 }
 
 .controls {
+  position:relative;
   display:flex;
   align-items:center;
   gap:10px;
@@ -125,8 +126,21 @@ button { cursor:pointer; }
 }
 
 #updated {
-  font-size:10px;
-  color:#e0fff5;
+  flex-basis:100%;
+  font-size:11px;
+  font-weight:600;
+  font-variant-numeric:tabular-nums;
+  line-height:1.4;
+  color:#fff;
+}
+
+@media(min-width:768px) {
+  #updated {
+    position:absolute;
+    top:calc(100% + 5px);
+    right:0;
+    white-space:nowrap;
+  }
 }
 
 main {
@@ -2673,15 +2687,13 @@ function gtlReceiveZoneRows(data,live=false,updatedAt=null){
  renderDashboard();
  const e=document.getElementById("updated");
  const timestamp=new Date(updatedAt||NaN);
- e.textContent=Number.isFinite(timestamp.getTime())
-  ? "Last data updated: "+new Intl.DateTimeFormat("en-GB",{
-     dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Colombo"
-    }).format(timestamp)+" (Sri Lanka)"
-  : live?"Live data":"Excel snapshot";
- const uploadTime=$("excelUploadTime");
- if(uploadTime){
-  uploadTime.hidden=!Number.isFinite(timestamp.getTime());
-  uploadTime.textContent=uploadTime.hidden?"":e.textContent;
+ e.hidden=!Number.isFinite(timestamp.getTime());
+ e.textContent="";
+ if(!e.hidden){
+  const timeZone="Asia/Colombo";
+  const date=new Intl.DateTimeFormat("en-GB",{dateStyle:"medium",timeZone}).format(timestamp);
+  const time=new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",timeZone}).format(timestamp);
+  e.textContent=`Last data updated · ${date} · ${time} SLT`;
  }
  gtlDismissInitialSplash();
  const frame=document.getElementById("embeddedZoneMap");
@@ -2838,7 +2850,6 @@ loadData();
       <button type="submit">Sign in</button>
     </form>
   </details>
-  <p id="excelUploadTime" hidden></p>
   <p id="excelUploadStatus" role="status" hidden></p>
 </section>
 <footer class="gtl-credit-footer">
