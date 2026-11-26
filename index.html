@@ -2593,6 +2593,7 @@ $("gtlLogo").src = "./gtl-icon-1024.png?v=26";
    IT API integration: normalize incoming data into the same row keys here. */
 const GTL_ZONE_CONFIG={source:"snapshot", apiUrl:"", refreshSeconds:120};
 let gtlZoneRecords=[];
+let gtlUploadedSnapshot=null;
 function gtlFloorChanged(){renderDashboard();gtlSyncMap();}
 function gtlStatusChanged(){gtlSyncMap();}
 function gtlUpdateFloors(){
@@ -2629,7 +2630,7 @@ function gtlZoneSummary(data){
  });
  return [...groups.values()];
 }
-function gtlReceiveZoneRows(data,live=false){
+function gtlReceiveZoneRows(data,live=false,updatedAt=null){
  gtlZoneRecords=data.map(r=>({
   building:String(r.building||"").trim().toUpperCase(),
   floor:String(r.floor||"").trim(),
@@ -2646,7 +2647,17 @@ function gtlReceiveZoneRows(data,live=false){
  updateBuildingFilter();gtlUpdateFloors();
  renderDashboard();
  const e=document.getElementById("updated");
- e.textContent=(live?"Live data":"Excel snapshot")+" • "+new Date().toLocaleTimeString();
+ const timestamp=new Date(updatedAt||NaN);
+ e.textContent=Number.isFinite(timestamp.getTime())
+  ? "Last data updated: "+new Intl.DateTimeFormat("en-GB",{
+     dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Colombo"
+    }).format(timestamp)+" (Sri Lanka)"
+  : live?"Live data":"Excel snapshot";
+ const uploadTime=$("excelUploadTime");
+ if(uploadTime){
+  uploadTime.hidden=!Number.isFinite(timestamp.getTime());
+  uploadTime.textContent=uploadTime.hidden?"":e.textContent;
+ }
  gtlDismissInitialSplash();
  const frame=document.getElementById("embeddedZoneMap");
  if(frame?.contentWindow)frame.contentWindow.postMessage({type:"gtl-zone-data",rows:gtlZoneRecords},location.origin);
@@ -2670,7 +2681,10 @@ function loadData(){
  }
  fetch("./zone-data.json?ts="+Date.now(),{cache:"no-store"})
  .then(r=>{if(!r.ok)throw Error("Snapshot not found");return r.json()})
- .then(d=>gtlReceiveZoneRows(d.rows||[]))
+ .then(d=>{
+  const snapshot=gtlUploadedSnapshot||d;
+  gtlReceiveZoneRows(snapshot.rows||[],false,snapshot.updatedAt);
+ })
  .catch(err=>{loading=false;showError("Zone-wise data loading failed: "+err.message);});
 }
 const gtlOriginalRenderDashboard=renderDashboard;
@@ -2712,6 +2726,10 @@ loadData();
 .gtl-credit-footer {max-width:1750px;margin:18px auto 0;padding:17px 12px 22px;border-top:1px solid #dce8e4;background:#fff;color:#5b788e;text-align:center;font:400 11px/1.9 Arial,sans-serif;}
 .gtl-credit-footer .footer-title {color:#073b4e;font-weight:700;}
 .gtl-credit-footer .developer-name {font-weight:400 !important;color:#5b788e;}
+.excel-upload {max-width:1750px;margin:18px auto 0;padding:0 12px;text-align:right;}
+.excel-upload button {background:#003f26;color:#fff;border:0;border-radius:9px;padding:10px 14px;font:inherit;cursor:pointer;}
+.excel-upload button:disabled {opacity:.6;cursor:wait;}
+.excel-upload p {margin:8px 0;color:#073b4e;}
 @media(max-width:767px){.gtl-credit-footer{font-size:10px;padding:15px 10px 20px;}}
 /* Responsive overall chart: selectable arcs without redirecting */
 #overallChart{max-width:100%;touch-action:manipulation}
@@ -2719,11 +2737,94 @@ loadData();
 @media(min-width:1200px){.donut-layout{max-width:100%}}
 @media(max-width:767px){#overallLegend .overall-legend-button{min-height:44px;font-size:12px}}
 </style>
+<section class="excel-upload" aria-label="Excel data upload">
+  <input id="excelFile" type="file" accept=".xlsx" hidden>
+  <button id="excelUpload" type="button">Upload Excel</button>
+  <button id="excelDownload" type="button" hidden>Download snapshot</button>
+  <p id="excelUploadTime" hidden></p>
+  <p id="excelUploadStatus" role="status" hidden></p>
+</section>
 <footer class="gtl-credit-footer">
   <div class="footer-title">GTL WAREHOUSE AREA UTILIZATION DASHBOARD</div>
   <div>Designed &amp; Developed by <span class="developer-name">Sandun Jayaweera</span></div>
   <div>&copy; 2026 Global Transportation &amp; Logistics (Pvt) Ltd.</div>
 </footer>
+<script>
+function excelZoneRows(sheet, xlsx) {
+  if(!sheet["!ref"]) throw new Error("The Details tab is empty.");
+  const range=xlsx.utils.decode_range(sheet["!ref"]);
+  range.s={r:0,c:0};
+  const grid=xlsx.utils.sheet_to_json(sheet,{range,header:1,raw:true,defval:"",blankrows:true});
+  const labels=grid.map(row=>row.map(value=>String(value).trim().toUpperCase().replace(/\s+/g," ")));
+  const headerIndex=labels.findIndex(row=>row.includes("BUILDING NAME"));
+  if(headerIndex<0) throw new Error("BUILDING NAME header not found in Details.");
+  const headers=labels[headerIndex];
+  const textFields={building:"BUILDING NAME",floor:"FLOOR LEVEL",zone:"ZONE",subLocation:"SUB LOCATION",storeType:"STORE TYPE"};
+  const numericFields={total:headers.includes("TOTAL AREA")?"TOTAL AREA":"TOTAT AREA",non:"NON SELLING",rented:"RENTED",used:"USING",balance:"BALANCE",cbm:"CBM"};
+  const missing=[...Object.values(textFields),...Object.values(numericFields)].filter(label=>!headers.includes(label));
+  if(missing.length) throw new Error("Missing columns: "+missing.join(", "));
+
+  const rows=[];
+  for(let index=headerIndex+1;index<grid.length;index++){
+    const value=label=>String(grid[index][headers.indexOf(label)]??"").trim();
+    const row=Object.fromEntries(Object.entries(textFields).map(([key,label])=>[key,value(label)]));
+    if(!row.building&&!row.floor&&!row.zone) continue;
+    row.building=row.building.toUpperCase();
+    const line=index+1;
+    if(!ORDER.includes(row.building)||floorType(row.floor)==="other"||!row.zone||/[<>&"']/.test(row.floor)){
+      throw new Error("Row "+line+": check the building, floor and zone.");
+    }
+    for(const [key,label] of Object.entries(numericFields)){
+      const cell=xlsx.utils.encode_cell({r:index,c:headers.indexOf(label)});
+      const source=sheet[cell];
+      const number=Number(value(label).replace(/,/g,""));
+      if(!Number.isFinite(number)||source?.t==="e"||(source?.f&&source.v==null)){
+        throw new Error("Row "+line+": "+label+" must contain a calculated number.");
+      }
+      row[key]=number;
+    }
+    rows.push({...row,nonSelling:row.non,utilized:row.used,available:Math.max(0,row.balance),rawAvailable:row.balance});
+  }
+  if(!rows.length) throw new Error("No zone records found in Details.");
+  return rows;
+}
+
+const excelInput=$("excelFile"),excelButton=$("excelUpload"),excelStatus=$("excelUploadStatus");
+excelButton.onclick=()=>excelInput.click();
+excelInput.onchange=async()=>{
+  const file=excelInput.files[0];
+  if(!file) return;
+  excelButton.disabled=true;
+  excelStatus.hidden=false;
+  excelStatus.textContent="Reading Excel file…";
+  try{
+    const xlsx=await import("https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs");
+    const workbook=xlsx.read(new Uint8Array(await file.arrayBuffer()),{type:"array"});
+    const sheet=workbook.Sheets.Details;
+    if(!sheet) throw new Error("Details tab not found.");
+    const rows=excelZoneRows(sheet,xlsx);
+    const updatedAt=new Date().toISOString();
+    gtlUploadedSnapshot={updatedAt,rows};
+    gtlReceiveZoneRows(rows,false,updatedAt);
+    $("excelDownload").hidden=false;
+    excelStatus.textContent=rows.length+" zones loaded · Preview only";
+  }catch(error){
+    excelStatus.textContent="Upload failed: "+error.message;
+  }finally{
+    excelInput.value="";
+    excelButton.disabled=false;
+  }
+};
+$("excelDownload").onclick=()=>{
+  const snapshot=new Blob([JSON.stringify(gtlUploadedSnapshot,null,2)+"\n"],{type:"application/json"});
+  const url=URL.createObjectURL(snapshot);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download="zone-data.json";
+  link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+</script>
 
 
 </body>
