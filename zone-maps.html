@@ -132,6 +132,16 @@
 .available-maps .available-floors.is-expanded > .floor:not(.is-expanded) {display:none;}
 .available-maps .available-floors.is-expanded > .floor.is-expanded {grid-column:1/-1;}
 .available-maps .floor.is-expanded .map {cursor:zoom-out;}
+.available-maps .floor.is-expanded .map[data-building="GREEN BUILDING"] {width:min(100%,var(--green-fit-width,650px));margin-inline:auto;}
+html:not(.available-maps) .map .zone-outline {stroke:#fff!important;stroke-opacity:1!important;}
+html:not(.available-maps) .map[data-building="GREEN BUILDING"][data-floor="ground"] .zone-outline {stroke-width:1.6!important;}
+@media(prefers-reduced-motion:no-preference){
+ .available-maps .floor.is-expanded .map svg .fill[data-kind="available"] {animation:availability-highlight .82s ease-in-out 3!important;}
+}
+@keyframes availability-highlight {
+ 0%,100% {opacity:1;}
+ 50% {opacity:.3;}
+}
 @media(max-width:700px){
  .available-maps .available-building {padding:5px;margin-bottom:9px;}
  .available-maps .available-building-heading {padding:7px 6px;margin-bottom:6px;}
@@ -580,7 +590,17 @@ function applyOriginalZoneBackgrounds(image,view,zones){
 }
 function bounds(mapping,geo){if(mapping.type==='rect')return geo;const pts=geo.trim().split(/\s+/).map(p=>p.split(',').map(Number));const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);return [Math.min(...xs),Math.min(...ys),Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys)]}
 const availabilityMapsView=new URLSearchParams(location.search).get('view')==='available-maps';
-if(availabilityMapsView)document.documentElement.classList.add('available-maps');
+if(availabilityMapsView){
+ document.documentElement.classList.add('available-maps');
+ const viewport=window.parent;
+ const fitGreenMaps=()=>{
+  const availableHeight=Math.max(1,viewport.innerHeight-112);
+  document.documentElement.style.setProperty('--green-fit-width',Math.floor(availableHeight*900/705)+'px');
+ };
+ fitGreenMaps();
+ viewport.addEventListener('resize',fitGreenMaps);
+ window.addEventListener('pagehide',()=>viewport.removeEventListener('resize',fitGreenMaps),{once:true});
+}
 
 function b3OfficeReveal(svg,defs){
  const [x,y,width,height]=B3_GROUND['OFFICE AND CANTEEN (PROPOSED)'];
@@ -805,6 +825,9 @@ function renderAvailabilityMaps(rows){
     grid.classList.toggle('is-expanded',expanded);
     map.setAttribute('aria-pressed',String(expanded));
     reportZoneHeight();
+    if(expanded&&building==='GREEN BUILDING'){
+     requestAnimationFrame(()=>floor.scrollIntoView({block:'start'}));
+    }
    };
    map.addEventListener('click',toggleMapWidth);
    map.addEventListener('keydown',event=>{
